@@ -34,4 +34,8 @@ extern int notleader[MAX_CLIENTS];
 
 int BotMatchMessage(bot_state_t *bs, char *message);
 void BotPrintTeamGoal(bot_state_t *bs);
+void BotVoiceChat_Defend(bot_state_t* bs, int client, int mode);
+
+
+
 

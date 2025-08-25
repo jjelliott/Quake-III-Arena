@@ -1990,3 +1990,6 @@ int BotMatchMessage(bot_state_t *bs, char *message) {
 	}
 	return qtrue;
 }
+void BotVoiceChat_Defend(bot_state_t* bs, int player, int mode) {
+	// For now, do nothing. Prevents QVM build errors.
+}

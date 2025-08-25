@@ -21,6 +21,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 //
 // g_local.h -- local definitions for game module
+#ifndef G_LOCAL_H
+#define G_LOCAL_H
 
 #include "q_shared.h"
 #include "bg_public.h"
@@ -66,6 +68,27 @@ typedef enum {
 
 typedef struct gentity_s gentity_t;
 typedef struct gclient_s gclient_t;
+
+typedef struct {
+
+	int     attack_finished;   // ms until next attack is allowed
+	int     pausetime;         // ms used in stand/walk logic
+	vec3_t view_ofs;
+	vec3_t  move_target;       // next path_corner goal
+	gentity_t* goalentity;     // current goal entity
+	gentity_t* enemy;          // current target enemy
+	float ideal_yaw;
+	// Function pointers (Quake 1 parity)
+	void (*th_stand)(gentity_t* self);
+	void (*th_walk)(gentity_t* self);
+	void (*th_run)(gentity_t* self);
+	void (*th_melee)(gentity_t* self);
+	void (*th_missile)(gentity_t* self);
+	void (*th_pain)(gentity_t* self, gentity_t* attacker, int damage);
+	void (*th_die)(gentity_t* self, gentity_t* inflictor, gentity_t* attacker, int damage, int mod);
+	void (*th_sight)(gentity_t* self, gentity_t* other);
+
+} monsterinfo_t;
 
 struct gentity_s {
 	entityState_t	s;				// communicated by server to clients
@@ -145,7 +168,7 @@ struct gentity_s {
 	int			health;
 
 	qboolean	takedamage;
-
+	int			max_health;
 	int			damage;
 	int			splashDamage;	// quad will increase this without increasing radius
 	int			splashRadius;
@@ -175,6 +198,8 @@ struct gentity_s {
 	float		random;
 
 	gitem_t		*item;			// for bonus items
+	monsterinfo_t* monsterinfo;
+	float show_hostile;   // time until monsters consider this hostile
 };
 
 
@@ -323,6 +348,7 @@ struct gclient_s {
 #endif
 
 	char		*areabits;
+
 };
 
 
@@ -405,7 +431,8 @@ typedef struct {
 	int			exitTime;
 	vec3_t		intermission_origin;	// also used for spectator spawns
 	vec3_t		intermission_angle;
-
+	gentity_t *sight_entity;
+	float sight_entity_time;
 	qboolean	locationLinked;			// target_locations get linked
 	gentity_t	*locationHead;			// head of the location list
 	int			bodyQueIndex;			// dead bodies
@@ -969,3 +996,4 @@ int		trap_GeneticParentsAndChildSelection(int numranks, float *ranks, int *paren
 
 void	trap_SnapVector( float *v );
 
+#endif // G_LOCAL_H

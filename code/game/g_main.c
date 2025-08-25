@@ -411,6 +411,7 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 	G_Printf ("------- Game Initialization -------\n");
 	G_Printf ("gamename: %s\n", GAMEVERSION);
 	G_Printf ("gamedate: %s\n", __DATE__);
+	G_Printf("=== G_InitGame called: levelTime=%d restart=%d ===\n", levelTime, restart);
 
 	srand( randomSeed );
 

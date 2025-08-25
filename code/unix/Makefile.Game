@@ -65,10 +65,10 @@ GVMASM = \
 	$(GDIR)/vm/q_shared.asm \
 	$(GDIR)/vm/ai_dmnet.asm \
 	$(GDIR)/vm/ai_dmq3.asm \
+	$(GDIR)/vm/ai_cmd.asm \
 	$(GDIR)/vm/ai_team.asm \
 	$(GDIR)/vm/ai_main.asm \
 	$(GDIR)/vm/ai_chat.asm \
-	$(GDIR)/vm/ai_cmd.asm \
 	$(GDIR)/vm/g_active.asm \
 	$(GDIR)/vm/g_arenas.asm \
 	$(GDIR)/vm/g_bot.asm \
@@ -87,13 +87,15 @@ GVMASM = \
 	$(GDIR)/vm/g_team.asm \
 	$(GDIR)/vm/g_trigger.asm \
 	$(GDIR)/vm/g_utils.asm \
-	$(GDIR)/vm/g_weapon.asm
+	$(GDIR)/vm/g_weapon.asm \
+	$(GDIR)/vm/ai_monster.asm \
+	$(GDIR)/vm/mon_grunt.asm
 
 $(BDIR)/$(GAMEDIR)/vm/qagame.qvm : $(GVMASM)
 	$(Q3ASM) -o $@ $(GVMASM) $(SRCDIR)/game/g_syscalls.asm
 
 $(GDIR)/vm/ai_chat.asm : $(GDIR)/ai_chat.c; $(DO_LCC) 
-$(GDIR)/vm/ai_cmd.asm : $(GDIR)/ai_cmd.c; $(DO_LCC) 
+$(GDIR)/vm/ai_cmd.asm : $(GDIR)/ai_cmd.c; $(DO_LCC)
 $(GDIR)/vm/ai_dmnet.asm : $(GDIR)/ai_dmnet.c; $(DO_LCC) 
 $(GDIR)/vm/ai_dmq3.asm : $(GDIR)/ai_dmq3.c; $(DO_LCC) 
 $(GDIR)/vm/ai_main.asm : $(GDIR)/ai_main.c; $(DO_LCC) 
@@ -122,9 +124,10 @@ $(GDIR)/vm/g_team.asm : $(GDIR)/g_team.c; $(DO_LCC)
 $(GDIR)/vm/g_trigger.asm : $(GDIR)/g_trigger.c; $(DO_LCC) 
 $(GDIR)/vm/g_utils.asm : $(GDIR)/g_utils.c; $(DO_LCC) 
 $(GDIR)/vm/g_weapon.asm : $(GDIR)/g_weapon.c; $(DO_LCC) 
+$(GDIR)/vm/mon_grunt.asm : $(GDIR)/mon_grunt.c; $(DO_LCC) 
 $(GDIR)/vm/q_math.asm : $(GDIR)/q_math.c; $(DO_LCC) 
 $(GDIR)/vm/q_shared.asm : $(GDIR)/q_shared.c; $(DO_LCC) 
-
+$(GDIR)/vm/ai_monster.asm : $(GDIR)/ai_monster.c; $(DO_LCC) 
 $(BDIR)/$(GAMEDIR)/vm/cgame.qvm : 
 	echo cgame.qvm disabled
 

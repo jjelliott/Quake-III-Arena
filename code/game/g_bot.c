@@ -1015,3 +1015,5 @@ void G_InitBots( qboolean restart ) {
 		}
 	}
 }
+
+ 

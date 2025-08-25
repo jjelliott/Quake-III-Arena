@@ -186,6 +186,9 @@ void SP_team_CTF_blueplayer( gentity_t *ent );
 void SP_team_CTF_redspawn( gentity_t *ent );
 void SP_team_CTF_bluespawn( gentity_t *ent );
 
+// monsters
+void SP_monster_grunt_q1(gentity_t* ent);
+
 #ifdef MISSIONPACK
 void SP_team_blueobelisk( gentity_t *ent );
 void SP_team_redobelisk( gentity_t *ent );
@@ -258,7 +261,7 @@ spawn_t	spawns[] = {
 
 	{"team_CTF_redspawn", SP_team_CTF_redspawn},
 	{"team_CTF_bluespawn", SP_team_CTF_bluespawn},
-
+	{"monster_grunt_q1", SP_monster_grunt_q1},
 #ifdef MISSIONPACK
 	{"team_redobelisk", SP_team_redobelisk},
 	{"team_blueobelisk", SP_team_blueobelisk},
@@ -268,7 +271,7 @@ spawn_t	spawns[] = {
 
 	{0, 0}
 };
-
+ 
 /*
 ===============
 G_CallSpawn
@@ -280,7 +283,7 @@ returning qfalse if not found
 qboolean G_CallSpawn( gentity_t *ent ) {
 	spawn_t	*s;
 	gitem_t	*item;
-
+	G_Printf("Spawning entity: classname='%s'\n", ent->classname);
 	if ( !ent->classname ) {
 		G_Printf ("G_CallSpawn: NULL classname\n");
 		return qfalse;
