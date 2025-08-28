@@ -70,8 +70,8 @@ void AI_FoundTarget(gentity_t* self);
 
 // Frame drivers
 void AI_Stand(gentity_t* self);
-void AI_WalkFrame(gentity_t* self, float dist);
-void AI_RunFrame(gentity_t* self, float dist);
+void AI_Walk(gentity_t* self, float dist);
+void AI_Run(gentity_t* self, float dist);
 
 // Path_corner support
 void SP_path_corner_q1(gentity_t* self);

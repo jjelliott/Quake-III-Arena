@@ -69,6 +69,13 @@ typedef enum {
 typedef struct gentity_s gentity_t;
 typedef struct gclient_s gclient_t;
 
+typedef enum {
+	AS_STRAIGHT = 0,
+	AS_SLIDING,
+	AS_MISSILE,
+	AS_MELEE
+} attack_state_t;
+
 typedef struct {
 
 	int     attack_finished;   // ms until next attack is allowed
@@ -78,6 +85,8 @@ typedef struct {
 	gentity_t* goalentity;     // current goal entity
 	gentity_t* enemy;          // current target enemy
 	float ideal_yaw;
+	float search_time;
+	attack_state_t attack_state;
 	// Function pointers (Quake 1 parity)
 	void (*th_stand)(gentity_t* self);
 	void (*th_walk)(gentity_t* self);
@@ -87,6 +96,7 @@ typedef struct {
 	void (*th_pain)(gentity_t* self, gentity_t* attacker, int damage);
 	void (*th_die)(gentity_t* self, gentity_t* inflictor, gentity_t* attacker, int damage, int mod);
 	void (*th_sight)(gentity_t* self, gentity_t* other);
+	qboolean (*check_attack_t)(gentity_t* self);
 
 } monsterinfo_t;
 

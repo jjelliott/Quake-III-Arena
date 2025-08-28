@@ -32,6 +32,14 @@ gentity_t* checkclient(void) {
     return NULL;
 }
 
+qboolean FacingIdeal(gentity_t* self) {
+    float delta = AngleNormalize360(self->s.angles[YAW] - self->monsterinfo->ideal_yaw);
+    if (delta > 45 && delta < 315) {
+        return qfalse;
+    }
+    return qtrue;
+}
+
 //
 // Range categorization
 //
@@ -224,22 +232,47 @@ void AI_Stand(gentity_t* self) {
     }
 }
 
-void AI_WalkFrame(gentity_t* self, float dist) {
-    if (!self->monsterinfo) return;
-    if (AI_MoveToGoal(self, dist)) {
-        // reached target, handled in AI_Touch_MoveTarget
-    }
-    self->s.frame++;
-    if (self->s.frame > self->monsterinfo->endframe)
-        self->s.frame = self->monsterinfo->startframe;
+void AI_Walk(gentity_t* self, float dist) {
+
 }
 
-void AI_RunFrame(gentity_t* self, float dist) {
-    if (!self->monsterinfo) return;
-    AI_MoveToGoal(self, dist);
-    self->s.frame++;
-    if (self->s.frame > self->monsterinfo->endframe)
-        self->s.frame = self->monsterinfo->startframe;
+void AI_Run(gentity_t* self, float dist) {
+    gentity_t* enemy = self->enemy;
+
+    if (!enemy || !enemy->inuse || enemy->health <= 0) {
+        // handle oldenemy fallback, or go idle
+        return;
+    }
+
+    self->show_hostile = level.time + 1000;
+
+    qboolean enemy_visible = Visible(self, enemy);
+    if (enemy_visible) {
+        self->search_time = level.time + 5000;
+    }
+
+    float enemy_yaw = vectoyaw(enemy->r.currentOrigin - self->r.currentOrigin);
+
+    // Attack state handling
+    if (self->attack_state == AS_MISSILE) {
+        ai_run_missile(self, enemy_yaw);
+        return;
+    }
+    if (self->attack_state == AS_MELEE) {
+        ai_run_melee(self, enemy_yaw);
+        return;
+    }
+
+    if (self->monsterinfo->th_check && self->monsterinfo->th_check(self)) {
+        return;
+    }
+
+    if (self->attack_state == AS_SLIDING) {
+        ai_run_slide(self, enemy_yaw, dist);
+        return;
+    }
+
+    movetogoal(self, dist);
 }
 
 // ---------------------------------------------------------------------------
