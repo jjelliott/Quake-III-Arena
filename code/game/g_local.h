@@ -82,13 +82,6 @@ typedef enum {
 	AS_MELEE
 } attack_state_t;
 
-typedef enum {
-	AS_STRAIGHT = 0,
-	AS_SLIDING,
-	AS_MISSILE,
-	AS_MELEE
-} attack_state_t;
-
 typedef struct {
 
 	int     attack_finished;   // ms until next attack is allowed
