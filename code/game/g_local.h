@@ -68,6 +68,19 @@ typedef enum {
 
 typedef struct gentity_s gentity_t;
 typedef struct gclient_s gclient_t;
+typedef enum {
+	RANGE_MELEE,
+	RANGE_NEAR,
+	RANGE_MID,
+	RANGE_FAR
+} range_t;
+
+typedef enum {
+	AS_STRAIGHT = 0,
+	AS_SLIDING,
+	AS_MISSILE,
+	AS_MELEE
+} attack_state_t;
 
 typedef enum {
 	AS_STRAIGHT = 0,
@@ -96,7 +109,7 @@ typedef struct {
 	void (*th_pain)(gentity_t* self, gentity_t* attacker, int damage);
 	void (*th_die)(gentity_t* self, gentity_t* inflictor, gentity_t* attacker, int damage, int mod);
 	void (*th_sight)(gentity_t* self, gentity_t* other);
-	qboolean (*check_attack_t)(gentity_t* self);
+	qboolean(*th_check)(gentity_t* self);
 
 } monsterinfo_t;
 

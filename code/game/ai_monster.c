@@ -43,12 +43,6 @@ qboolean FacingIdeal(gentity_t* self) {
 //
 // Range categorization
 //
-typedef enum {
-    RANGE_MELEE,
-    RANGE_NEAR,
-    RANGE_MID,
-    RANGE_FAR
-} range_t;
 
 range_t Range(gentity_t* self, gentity_t* targ) {
     vec3_t spot1, spot2;
@@ -233,7 +227,6 @@ void AI_Stand(gentity_t* self) {
 }
 
 void AI_Walk(gentity_t* self, float dist) {
-
 }
 
 void AI_Run(gentity_t* self, float dist) {
@@ -248,18 +241,18 @@ void AI_Run(gentity_t* self, float dist) {
 
     qboolean enemy_visible = Visible(self, enemy);
     if (enemy_visible) {
-        self->search_time = level.time + 5000;
+        self->monsterinfo->search_time = level.time + 5000;
     }
 
     float enemy_yaw = vectoyaw(enemy->r.currentOrigin - self->r.currentOrigin);
 
     // Attack state handling
-    if (self->attack_state == AS_MISSILE) {
-        ai_run_missile(self, enemy_yaw);
+    if (self->monsterinfo->attack_state == AS_MISSILE) {
+        // ai_run_missile(self, enemy_yaw);
         return;
     }
-    if (self->attack_state == AS_MELEE) {
-        ai_run_melee(self, enemy_yaw);
+    if (self->monsterinfo->attack_state == AS_MELEE) {
+        // ai_run_melee(self, enemy_yaw);
         return;
     }
 
@@ -267,8 +260,8 @@ void AI_Run(gentity_t* self, float dist) {
         return;
     }
 
-    if (self->attack_state == AS_SLIDING) {
-        ai_run_slide(self, enemy_yaw, dist);
+    if (self->monsterinfo->attack_state == AS_SLIDING) {
+        // ai_run_slide(self, enemy_yaw, dist);
         return;
     }
 
