@@ -54,7 +54,6 @@ void AI_InitForEntity(gentity_t* ent);
 void AI_ClearEntity(gentity_t* ent);
 
 // Movement / goal handling
-qboolean AI_MoveToGoal(gentity_t* self, float dist);
 qboolean AI_WalkMove(gentity_t* self, float yaw, float dist);
 void AI_ChangeYaw(gentity_t* ent);
 qboolean AI_FacingIdeal(gentity_t* ent);
@@ -69,6 +68,7 @@ qboolean AI_FindTarget(gentity_t* self);
 void AI_FoundTarget(gentity_t* self);
 
 // Frame drivers
+void AI_Face(gentity_t* self);
 void AI_Stand(gentity_t* self);
 void AI_Walk(gentity_t* self, float dist);
 void AI_Run(gentity_t* self, float dist);
@@ -76,8 +76,10 @@ void AI_Run(gentity_t* self, float dist);
 // Path_corner support
 void SP_path_corner_q1(gentity_t* self);
 void AI_Touch_MoveTarget(gentity_t* self, gentity_t* other, trace_t* trace);
-void movetogoal(gentity_t* self, float dist);
+qboolean AI_MoveToGoal(gentity_t* self, float dist);
 // Utility
 void AI_SetMoveTarget(gentity_t* self, gentity_t* target);
 void WalkMonsterStart(gentity_t* self);
+void SUB_AttackFinished(gentity_t* self, float delay);
+void SUB_CheckRefire(gentity_t* self, void thinkFn(gentity_t* nSelf));
 #endif // AI_MONSTER_H

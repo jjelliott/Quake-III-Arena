@@ -53,7 +53,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define FL_NO_BOTS				0x00002000	// spawn point not for bot use
 #define FL_NO_HUMANS			0x00004000	// spawn point just for bots
 #define FL_FORCE_GESTURE		0x00008000	// force gesture on client
-
+//monsterinfo flags
+#define FL_ONGROUND				0x00000010
+#define FL_FLY					0x00000020
+#define FL_SWIM					0x00000040
+#define FL_PARTIALGROUND		0x00000080
 // movers are things like doors, plats, buttons, etc
 typedef enum {
 	MOVER_POS1,
@@ -85,14 +89,17 @@ typedef enum {
 typedef struct {
 
 	int     attack_finished;   // ms until next attack is allowed
-	int     pausetime;         // ms used in stand/walk logic
+	int     pausetime;// ms used in stand/walk logic
+	int cnt;
 	vec3_t view_ofs;
 	vec3_t  move_target;       // next path_corner goal
 	gentity_t* goalentity;     // current goal entity
-	gentity_t* enemy;          // current target enemy
 	float ideal_yaw;
+	float yaw_speed;          // degrees per frame (default ~20)
 	float search_time;
+	int pain_finished;
 	attack_state_t attack_state;
+	int flags;
 	// Function pointers (Quake 1 parity)
 	void (*th_stand)(gentity_t* self);
 	void (*th_walk)(gentity_t* self);
@@ -102,7 +109,7 @@ typedef struct {
 	void (*th_pain)(gentity_t* self, gentity_t* attacker, int damage);
 	void (*th_die)(gentity_t* self, gentity_t* inflictor, gentity_t* attacker, int damage, int mod);
 	void (*th_sight)(gentity_t* self, gentity_t* other);
-	qboolean(*th_check)(gentity_t* self);
+	qboolean(*th_check)(gentity_t* self, range_t enemy_range);
 
 } monsterinfo_t;
 
@@ -167,6 +174,7 @@ struct gentity_s {
 
 	float		speed;
 	vec3_t		movedir;
+	vec3_t      velocity;   // velocity in XYZ
 
 	int			nextthink;
 	void		(*think)(gentity_t *self);
