@@ -191,7 +191,7 @@ void Bullet_Fire (gentity_t *ent, float spread, int damage ) {
 		SnapVectorTowards( tr.endpos, muzzle );
 
 		// send bullet impact
-		if ( traceEnt->takedamage && traceEnt->client ) {
+		if ( traceEnt->takedamage) { // && traceEnt->client ) {
 			tent = G_TempEntity( tr.endpos, EV_BULLET_HIT_FLESH );
 			tent->s.eventParm = traceEnt->s.number;
 			if( LogAccuracyHit( traceEnt, ent ) ) {
