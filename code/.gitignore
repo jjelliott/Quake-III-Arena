@@ -2,3 +2,6 @@
 .idea/
 .code
 **/*.asm
+*.obj
+**/Debug/
+**/Debug_TA/
