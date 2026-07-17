@@ -53,11 +53,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define FL_NO_BOTS				0x00002000	// spawn point not for bot use
 #define FL_NO_HUMANS			0x00004000	// spawn point just for bots
 #define FL_FORCE_GESTURE		0x00008000	// force gesture on client
-//monsterinfo flags
-#define FL_ONGROUND				0x00000010
-#define FL_FLY					0x00000020
-#define FL_SWIM					0x00000040
-#define FL_PARTIALGROUND		0x00000080
+// monsterinfo flags
+#define MONFL_ONGROUND			0x00000001
+#define MONFL_FLY				0x00000002
+#define MONFL_SWIM				0x00000004
+#define MONFL_PARTIALGROUND		0x00000008
 // movers are things like doors, plats, buttons, etc
 typedef enum {
 	MOVER_POS1,

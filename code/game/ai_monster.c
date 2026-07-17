@@ -84,6 +84,8 @@ range_t Range(gentity_t* self, gentity_t* targ) {
     vec3_t targ_offset;
     vec3_t delta;
     float r;
+    if (!self->monsterinfo || !targ)
+        return RANGE_FAR;
     if (targ->client) {
         targ_offset[0] = 0;
         targ_offset[1] = 0;
@@ -109,6 +111,19 @@ range_t Range(gentity_t* self, gentity_t* targ) {
     return RANGE_FAR;
 }
 
+qboolean VectorCompareEpsilon(const vec3_t a, const vec3_t b, float eps) {
+    return (fabs(a[0] - b[0]) <= eps &&
+        fabs(a[1] - b[1]) <= eps &&
+        fabs(a[2] - b[2]) <= eps);
+}
+void AssertEntityStateValid(gentity_t* e) {
+    if (e->s.number < 0 || e->s.number >= MAX_GENTITIES) {
+        G_Error("Invalid s.number for entity %p: %d\n", e, e->s.number);
+    }
+    // optional: check modelindex / eType if you suspect garbage
+}
+
+
 //
 // Visibility check
 //
@@ -116,8 +131,11 @@ qboolean Visible(gentity_t* self, gentity_t* targ) {
     vec3_t spot1, spot2;
     trace_t tr;
 
-    VectorAdd(self->r.currentOrigin, self->monsterinfo->view_ofs, spot1);
+    if (!self->monsterinfo || !targ)
+        return qfalse;
 
+    VectorAdd(self->r.currentOrigin, self->monsterinfo->view_ofs, spot1);
+    AssertEntityStateValid(self);
     trap_Trace(&tr, spot1, NULL, NULL, targ->r.currentOrigin, self->s.number, MASK_SOLID);
 
     if (tr.fraction == 1.0f) {
@@ -155,10 +173,10 @@ qboolean AI_FindTarget(gentity_t* self)
             return qtrue;
     }
     else {
-        client = checkclient(); // TODO: implement checkclient
-        if (!client)
-            return qfalse;
+        client = checkclient();
     }
+    if (!client)
+        return qfalse;
     // G_Printf("%s\n", client->classname);
     if (client == self->enemy) {
         return qfalse;
@@ -205,19 +223,21 @@ qboolean AI_FindTarget(gentity_t* self)
 }
 
 void SUB_AttackFinished(gentity_t* self, float delay) {
+    if (!self->monsterinfo)
+        return;
     self->monsterinfo->attack_finished = level.time + delay;
 }
 void HuntTarget(gentity_t* self) {
 
     vec3_t dir;
-    if (!self->enemy) {
+    if (!self->enemy || !self->monsterinfo) {
         return;
     }
 
     self->monsterinfo->goalentity = self->enemy;
 
     // switch to running AI
-    if (self->monsterinfo && self->monsterinfo->th_run) {
+    if (self->monsterinfo->th_run) {
         self->think = self->monsterinfo->th_run;
     }
 
@@ -229,13 +249,16 @@ void HuntTarget(gentity_t* self) {
     self->nextthink = level.time + FRAMETIME; // ~0.1s
 
     // delay before attacking
-    SUB_AttackFinished(self, 1.0f);
+    SUB_AttackFinished(self, SEC(1));
 }
 void AI_FoundTarget(gentity_t* self) {
+    if (!self->monsterinfo)
+        return;
+
     if (self->enemy && strcmp(self->enemy->classname, "player") == 0) {
         level.sight_entity = self;
         level.sight_entity_time = level.time;
-    }self->monsterinfo->attack_finished = level.time + 3000;
+    }
 
     self->show_hostile = level.time + 1000; // ms
 
@@ -248,6 +271,9 @@ void AI_FoundTarget(gentity_t* self) {
 
 void SUB_CheckRefire(gentity_t* self, void thinkFn(gentity_t* nSelf))
 {
+    if (!self->monsterinfo || !self->enemy)
+        return;
+
     if (self->monsterinfo->cnt == 1)
         return;
 
@@ -256,26 +282,41 @@ void SUB_CheckRefire(gentity_t* self, void thinkFn(gentity_t* nSelf))
 
     self->monsterinfo->cnt = 1;
     self->think = thinkFn;
-};
+}
 // ---------------------------------------------------------------------------
 // Frame drivers
 // ---------------------------------------------------------------------------
 void AI_Face(gentity_t* self)
 {
-    vec3_t dir;
+    vec3_t dir, newOrigin;
+    if (!self->enemy || !self->monsterinfo)
+        return;
     VectorSubtract(self->enemy->r.currentOrigin, self->r.currentOrigin, dir);
     self->monsterinfo->ideal_yaw = vectoyaw(dir);
     AI_ChangeYaw(self);
-    trap_LinkEntity(self);
-    VectorCopy(self->r.currentOrigin, self->s.origin);
-    self->s.pos.trType = TR_STATIONARY;
-    VectorCopy(self->r.currentOrigin, self->s.pos.trBase);
-    self->s.apos.trType = TR_STATIONARY; // angles won't be interpolated
-    self->s.apos.trTime = level.time;
-    self->s.apos.trBase[YAW] = self->s.angles[YAW];
-    
+
+    // Prepare the entityState BEFORE linking
+    VectorCopy(self->r.currentOrigin, newOrigin);
+
+    // only update network state if origin or yaw changed meaningfully
+    if (!VectorCompareEpsilon(self->s.pos.trBase, newOrigin, 0.01f) ||
+        fabs(self->s.apos.trBase[YAW] - self->s.angles[YAW]) > 0.5f)
+    {
+        VectorCopy(newOrigin, self->s.origin);
+        self->s.pos.trType = TR_STATIONARY;
+        VectorCopy(newOrigin, self->s.pos.trBase);
+
+        self->s.apos.trType = TR_STATIONARY; // no interpolation for angles
+        self->s.apos.trTime = level.time;
+        self->s.apos.trBase[YAW] = self->s.angles[YAW];
+        AssertEntityStateValid(self);
+        trap_LinkEntity(self);
+    }
 }
+
 void AI_Stand(gentity_t* self) {
+    if (!self->monsterinfo)
+        return;
     if (AI_FindTarget(self)) {
         return; // target acquired, HuntTarget() is triggered
     }
@@ -371,7 +412,8 @@ void AI_Run_Missile(gentity_t* self, float enemy_yaw)
     AI_ChangeYaw(self);
     if (FacingIdeal(self))
     {
-        self->monsterinfo->th_missile(self);
+        if (self->monsterinfo->th_missile)
+            self->monsterinfo->th_missile(self);
         self->monsterinfo->attack_state = AS_STRAIGHT;
     }
 
@@ -384,8 +426,12 @@ void AI_Run(gentity_t* self, float dist) {
     gentity_t* enemy = self->enemy;
     range_t enemy_range;
 
+    if (!self->monsterinfo)
+        return;
+
     if (!enemy || !enemy->inuse || enemy->health <= 0) {
         // handle oldenemy fallback, or go idle
+        self->enemy = NULL;
         return;
     }
 
@@ -466,7 +512,7 @@ static float AI_Dist2D(const vec3_t a, const vec3_t b) {
 // ============================================================
 static qboolean AI_CloseEnough(gentity_t* ent, gentity_t* goal, float dist) {
     vec3_t emn, emx, gmn, gmx;
-
+    if (!goal || !goal->inuse) return qfalse;
     AI_AbsBoundsAt(ent, ent->r.currentOrigin, emn, emx);
     AI_AbsBoundsAt(goal, goal->r.currentOrigin, gmn, gmx);
 
@@ -506,7 +552,7 @@ static qboolean AI_StepDirection(gentity_t* self, float yawDeg, float dist) {
     // Try horizontal move first
     VectorCopy(self->r.currentOrigin, start);
     VectorAdd(start, move, end);
-
+    AssertEntityStateValid(self);
     trap_Trace(&tr, start, self->r.mins, self->r.maxs, end, self->s.number, clipmask);
     if (tr.fraction < 1.0f) {
         // Blocked horizontally — try step up, then move, then drop down once
@@ -556,7 +602,6 @@ static qboolean AI_StepDirection(gentity_t* self, float yawDeg, float dist) {
         // Not turned enough yet; undo move
         VectorCopy(start, self->r.currentOrigin);
         VectorCopy(start, self->s.origin);
-        trap_LinkEntity(self);
         return qfalse;
     }
 
@@ -568,10 +613,17 @@ static qboolean AI_StepDirection(gentity_t* self, float yawDeg, float dist) {
         self->s.angles[YAW] = vectoyaw(moveDir2D);
     }
 
-    trap_LinkEntity(self);
-    VectorCopy(self->r.currentOrigin, self->s.origin);
-    self->s.pos.trType = TR_STATIONARY;
-    VectorCopy(self->r.currentOrigin, self->s.pos.trBase);
+    // Only update networked entitystate if we actually moved/turned
+    if (!VectorCompareEpsilon(self->s.pos.trBase, self->r.currentOrigin, 0.01f) ||
+        fabs(self->s.angles[YAW] - self->s.apos.trBase[YAW]) > 0.5f)
+    {
+        VectorCopy(self->r.currentOrigin, self->s.origin);
+        self->s.pos.trType = TR_STATIONARY;
+        VectorCopy(self->r.currentOrigin, self->s.pos.trBase);
+        AssertEntityStateValid(self);
+        // keep angles already set above
+        trap_LinkEntity(self);
+    }
 
     return qtrue;
 }
@@ -652,8 +704,8 @@ static void AI_NewChaseDir(gentity_t* actor, gentity_t* enemy, float dist) {
     actor->monsterinfo->ideal_yaw = olddir;
 
     // Parity with Q1 bottom-fix: if not on valid ground, mark partial ground
-    if (!(actor->monsterinfo->flags & FL_ONGROUND)) {
-        actor->monsterinfo->flags |= FL_PARTIALGROUND; // define this in your flags if you want to track it
+    if (!(actor->monsterinfo->flags & MONFL_ONGROUND)) {
+        actor->monsterinfo->flags |= MONFL_PARTIALGROUND; // define this in your flags if you want to track it
     }
 }
 
@@ -678,7 +730,7 @@ qboolean AI_MoveToGoal(gentity_t* self, float dist) {
     goal = self->monsterinfo->goalentity;
 
     // Emulate Q1 "must be on ground/fly/swim". If you track FL_ONGROUND:
-    onGroundOrFree = ((self->monsterinfo->flags & (FL_ONGROUND | FL_FLY | FL_SWIM)) != 0);
+    onGroundOrFree = ((self->monsterinfo->flags & (MONFL_ONGROUND | MONFL_FLY | MONFL_SWIM)) != 0);
     if (!onGroundOrFree) {
         G_Printf("movetogoal not on ground: self=%i goal=%i\n",
             self->s.number,
@@ -715,16 +767,27 @@ qboolean AI_MoveToGoal(gentity_t* self, float dist) {
 // Init helpers
 // ---------------------------------------------------------------------------
 void AI_InitForEntity(gentity_t* ent) {
+    if (ent->monsterinfo) {
+        memset(ent->monsterinfo, 0, sizeof(monsterinfo_t));
+        return;
+    }
     ent->monsterinfo = G_Alloc(sizeof(monsterinfo_t));
     memset(ent->monsterinfo, 0, sizeof(monsterinfo_t));
 
 }
 
 void AI_ClearEntity(gentity_t* ent) {
+    if (!ent) return;
+
+    // Do NOT G_FreeEntity here — that deletes the entire game entity.
     if (ent->monsterinfo) {
-        G_FreeEntity(ent);
+        memset(ent->monsterinfo, 0, sizeof(monsterinfo_t));
         ent->monsterinfo = NULL;
     }
+
+    ent->think = NULL;
+    ent->nextthink = 0;
+    ent->enemy = NULL;
 }
 
 // ---------------------------------------------------------------------------
@@ -744,7 +807,7 @@ void Monster_DropToFloor(gentity_t* ent) {
     VectorCopy(ent->s.origin, start);
     VectorCopy(ent->s.origin, end);
     end[2] -= 8192; // big number to go to floor
-
+    AssertEntityStateValid(ent);
     trap_Trace(&tr, start, ent->r.mins, ent->r.maxs, end, ent->s.number, MASK_SOLID);
 
     if (tr.fraction < 1.0) {
@@ -764,29 +827,38 @@ void Monster_Die(gentity_t* self, gentity_t* inflictor, gentity_t* attacker, int
     self->takedamage = qfalse;
     self->r.contents = 0;        // not solid to anything
     self->clipmask = 0;          // doesn’t collide when tracing against world
+    AssertEntityStateValid(self);
     trap_LinkEntity(self);
 
-    self->monsterinfo->th_die(self, inflictor, attacker, damage, mod);
+    if (self->monsterinfo && self->monsterinfo->th_die)
+        self->monsterinfo->th_die(self, inflictor, attacker, damage, mod);
 }
 
 void Monster_Pain(gentity_t* self, gentity_t* attacker, int damage)
 {
-    if (!self->enemy) 
+    if (!self->monsterinfo)
+        return;
+    if (!self->enemy)
     {
         self->enemy = attacker;
         AI_FoundTarget(self);
     }
-    self->monsterinfo->th_pain(self, attacker, damage);
+    if (self->monsterinfo->th_pain)
+        self->monsterinfo->th_pain(self, attacker, damage);
 }
 
 // Reusable WalkMonsterStart
 void WalkMonsterStart(gentity_t* self) {
     G_Printf("walkmonster starting\n");
+    if (!self->monsterinfo) {
+        G_Printf("WalkMonsterStart: entity %i has no monsterinfo\n", self->s.number);
+        return;
+    }
     // raise off floor a bit
     self->s.origin[2] += 1;
     Monster_DropToFloor(self);
 
-    self->monsterinfo->flags |= FL_ONGROUND;
+    self->monsterinfo->flags |= MONFL_ONGROUND;
     // check if monster is stuck
     // if (!AI_MoveToGoal(self, 0)) {
     // G_Printf("walkmonster in wall at: %.2f %.2f %.2f\n",
@@ -833,7 +905,7 @@ void WalkMonsterStart(gentity_t* self) {
     }
 
     // Spread think times
-    self->nextthink += random() * 0.5 * 1000;
+    self->nextthink = level.time + FRAMETIME + random() * 500;
     self->pain = Monster_Pain;
     self->die = Monster_Die;
     // total_monsters++;

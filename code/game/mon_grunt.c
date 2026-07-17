@@ -184,7 +184,7 @@ static qboolean grunt_check(gentity_t* self, range_t enemy_range)
     vec3_t delta;
     vec3_t spot1, spot2;
     float r;
-    trace_t* tr;
+    trace_t tr;
     gentity_t* targ;
     float chance;
     vec3_t targ_offset;
@@ -209,7 +209,7 @@ static qboolean grunt_check(gentity_t* self, range_t enemy_range)
 	VectorCopy(targ->r.currentOrigin, spot2);
 
     // do a trace between them
-    trap_Trace(tr, spot1, vec3_origin, vec3_origin, spot2, qfalse, CONTENTS_SOLID);
+    trap_Trace(&tr, spot1, vec3_origin, vec3_origin, spot2, self->s.number, CONTENTS_SOLID);
     VectorSubtract(spot1, spot2, delta);
     r = VectorLength(delta);
     G_Printf("spot1 %.1f %.1f %.1f spot2 %.1f %.1f %.1f r %.1f\n",
@@ -218,10 +218,9 @@ static qboolean grunt_check(gentity_t* self, range_t enemy_range)
     // if (tr.inopen && tr.inwater)
     //     return qfalse; // line crosses contents
 
-    // if (tr->entityNum != targ->s.number){
-    //     G_Printf("trace entity not target!\n");
-    //     return qfalse; // blocked by something else
-    // }
+    if (tr.fraction < 1.0f && tr.entityNum != targ->s.number) {
+        return qfalse;
+    }
 
     // missile attack delay
     if (level.time < self->monsterinfo->attack_finished)
@@ -277,6 +276,8 @@ void SP_monster_grunt_q1(gentity_t* self) {
     self->health = 30;
     self->max_health = 30;
     self->takedamage = qtrue;
+    self->pain = Monster_Pain;
+    self->die = Monster_Die;
     self->clipmask = MASK_MONSTERSOLID;
     self->r.svFlags |= SVF_MONSTER;
     self->r.svFlags &= ~SVF_NOCLIENT; // make sure it’s not ignored by server

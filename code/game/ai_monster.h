@@ -82,4 +82,6 @@ void AI_SetMoveTarget(gentity_t* self, gentity_t* target);
 void WalkMonsterStart(gentity_t* self);
 void SUB_AttackFinished(gentity_t* self, float delay);
 void SUB_CheckRefire(gentity_t* self, void thinkFn(gentity_t* nSelf));
+void Monster_Pain(gentity_t* self, gentity_t* attacker, int damage);
+void Monster_Die(gentity_t* self, gentity_t* inflictor, gentity_t* attacker, int damage, int mod);
 #endif // AI_MONSTER_H
