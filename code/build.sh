@@ -7,7 +7,7 @@ if [ -z "$Q3_MOD_DIR" ]; then
 fi
 
 # Run the build
-echo "Building q3 game VM..."
+echo "Building q3 game + cgame VMs..."
 if ! make -f unix/Makefile.Game; then
     echo "Error: Make failed. Aborting."
     exit 1
@@ -18,6 +18,15 @@ if [ ! -d "../baseq3/vm" ]; then
     echo "Error: ../baseq3/vm directory not found. Build may have failed."
     exit 1
 fi
+
+# Verify each expected VM was actually produced (guards against a silently
+# disabled/broken module target still exiting make with success).
+for qvm in qagame.qvm cgame.qvm; do
+    if [ ! -f "../baseq3/vm/$qvm" ]; then
+        echo "Error: ../baseq3/vm/$qvm was not produced. Build may have failed."
+        exit 1
+    fi
+done
 
 # Prepare temporary staging directory for PK3
 TMPDIR=$(mktemp -d)
