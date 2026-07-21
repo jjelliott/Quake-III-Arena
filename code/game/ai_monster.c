@@ -537,7 +537,7 @@ static qboolean AI_StepDirection(gentity_t* self, float yawDeg, float dist) {
     trace_t tr;
     float yawRad, delta, moveLen, moveYaw;
     float stepHeight = 18.0f;     // Q1-ish stair step
-    int clipmask = MASK_SOLID;    // or MASK_PLAYERSOLID if you prefer
+    int clipmask = MASK_MONSTERSOLID;    // or MASK_PLAYERSOLID if you prefer
 
     // Set and turn toward ideal_yaw first
     self->monsterinfo->ideal_yaw = yawDeg;
