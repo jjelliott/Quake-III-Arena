@@ -33,7 +33,7 @@ GDIR=$(SRCDIR)/game
 CGDIR=$(SRCDIR)/cgame
 UIDIR=$(SRCDIR)/ui
 
-LCCFLAGS=-DQ3_VM -S -Wf-target=bytecode -Wf-g -I..\cgame -I..\game -I..\ui
+LCCFLAGS=-DQ3_VM -S -Wf-target=bytecode -Wf-g -I$(CGDIR) -I$(GDIR) -I$(UIDIR)
 
 DO_LCC=$(LCC) $(LCCFLAGS) -o $@ -c $<
 
@@ -128,10 +128,67 @@ $(GDIR)/vm/mon_grunt.asm : $(GDIR)/mon_grunt.c; $(DO_LCC)
 $(GDIR)/vm/q_math.asm : $(GDIR)/q_math.c; $(DO_LCC) 
 $(GDIR)/vm/q_shared.asm : $(GDIR)/q_shared.c; $(DO_LCC) 
 $(GDIR)/vm/ai_monster.asm : $(GDIR)/ai_monster.c; $(DO_LCC) 
-$(BDIR)/$(GAMEDIR)/vm/cgame.qvm : 
-	echo cgame.qvm disabled
+#############################################################################
+# CGAME VM
+#############################################################################
 
-$(BDIR)/$(GAMEDIR)/vm/ui.qvm : 
+##NOTE:  cg_main must be first.  Control passes to first function in the vm
+
+CGVMASM = \
+	$(CGDIR)/vm/cg_main.asm \
+	$(CGDIR)/vm/cg_consolecmds.asm \
+	$(CGDIR)/vm/cg_draw.asm \
+	$(CGDIR)/vm/cg_drawtools.asm \
+	$(CGDIR)/vm/cg_effects.asm \
+	$(CGDIR)/vm/cg_ents.asm \
+	$(CGDIR)/vm/cg_event.asm \
+	$(CGDIR)/vm/cg_info.asm \
+	$(CGDIR)/vm/cg_localents.asm \
+	$(CGDIR)/vm/cg_marks.asm \
+	$(CGDIR)/vm/cg_players.asm \
+	$(CGDIR)/vm/cg_playerstate.asm \
+	$(CGDIR)/vm/cg_predict.asm \
+	$(CGDIR)/vm/cg_scoreboard.asm \
+	$(CGDIR)/vm/cg_servercmds.asm \
+	$(CGDIR)/vm/cg_snapshot.asm \
+	$(CGDIR)/vm/cg_view.asm \
+	$(CGDIR)/vm/cg_weapons.asm \
+	$(CGDIR)/vm/bg_slidemove.asm \
+	$(CGDIR)/vm/bg_pmove.asm \
+	$(CGDIR)/vm/bg_lib.asm \
+	$(CGDIR)/vm/bg_misc.asm \
+	$(CGDIR)/vm/q_math.asm \
+	$(CGDIR)/vm/q_shared.asm
+
+$(BDIR)/$(GAMEDIR)/vm/cgame.qvm : $(CGVMASM)
+	$(Q3ASM) -o $@ $(CGVMASM) $(CGDIR)/cg_syscalls.asm
+
+$(CGDIR)/vm/cg_main.asm : $(CGDIR)/cg_main.c; $(DO_LCC)
+$(CGDIR)/vm/cg_consolecmds.asm : $(CGDIR)/cg_consolecmds.c; $(DO_LCC)
+$(CGDIR)/vm/cg_draw.asm : $(CGDIR)/cg_draw.c; $(DO_LCC)
+$(CGDIR)/vm/cg_drawtools.asm : $(CGDIR)/cg_drawtools.c; $(DO_LCC)
+$(CGDIR)/vm/cg_effects.asm : $(CGDIR)/cg_effects.c; $(DO_LCC)
+$(CGDIR)/vm/cg_ents.asm : $(CGDIR)/cg_ents.c; $(DO_LCC)
+$(CGDIR)/vm/cg_event.asm : $(CGDIR)/cg_event.c; $(DO_LCC)
+$(CGDIR)/vm/cg_info.asm : $(CGDIR)/cg_info.c; $(DO_LCC)
+$(CGDIR)/vm/cg_localents.asm : $(CGDIR)/cg_localents.c; $(DO_LCC)
+$(CGDIR)/vm/cg_marks.asm : $(CGDIR)/cg_marks.c; $(DO_LCC)
+$(CGDIR)/vm/cg_players.asm : $(CGDIR)/cg_players.c; $(DO_LCC)
+$(CGDIR)/vm/cg_playerstate.asm : $(CGDIR)/cg_playerstate.c; $(DO_LCC)
+$(CGDIR)/vm/cg_predict.asm : $(CGDIR)/cg_predict.c; $(DO_LCC)
+$(CGDIR)/vm/cg_scoreboard.asm : $(CGDIR)/cg_scoreboard.c; $(DO_LCC)
+$(CGDIR)/vm/cg_servercmds.asm : $(CGDIR)/cg_servercmds.c; $(DO_LCC)
+$(CGDIR)/vm/cg_snapshot.asm : $(CGDIR)/cg_snapshot.c; $(DO_LCC)
+$(CGDIR)/vm/cg_view.asm : $(CGDIR)/cg_view.c; $(DO_LCC)
+$(CGDIR)/vm/cg_weapons.asm : $(CGDIR)/cg_weapons.c; $(DO_LCC)
+$(CGDIR)/vm/bg_slidemove.asm : $(GDIR)/bg_slidemove.c; $(DO_LCC)
+$(CGDIR)/vm/bg_pmove.asm : $(GDIR)/bg_pmove.c; $(DO_LCC)
+$(CGDIR)/vm/bg_lib.asm : $(GDIR)/bg_lib.c; $(DO_LCC)
+$(CGDIR)/vm/bg_misc.asm : $(GDIR)/bg_misc.c; $(DO_LCC)
+$(CGDIR)/vm/q_math.asm : $(GDIR)/q_math.c; $(DO_LCC)
+$(CGDIR)/vm/q_shared.asm : $(GDIR)/q_shared.c; $(DO_LCC)
+
+$(BDIR)/$(GAMEDIR)/vm/ui.qvm :
 	echo ui.qvm disabled
 
 #############################################################################
@@ -285,4 +342,4 @@ $(SRCDIR)/ui/q_shared.o : $(GDIR)/q_shared.c; $(DO_SHLIB_CC)
 #############################################################################
 
 clean:
-	rm -f $(GVMASM)
+	rm -f $(GVMASM) $(CGVMASM)
