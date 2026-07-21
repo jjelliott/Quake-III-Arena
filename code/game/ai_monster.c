@@ -165,7 +165,7 @@ qboolean AI_FindTarget(gentity_t* self)
     gentity_t* client;
     float r;
 
-    G_Printf("Searching for enemy\n");
+    //G_Printf("Searching for enemy\n");
     // quick sight wakeup (sight_entity from other monsters)
     if (level.sight_entity_time >= level.time - 100 && !(self->spawnflags & 3)) {
         client = level.sight_entity;
@@ -303,10 +303,10 @@ void AI_Face(gentity_t* self)
         fabs(self->s.apos.trBase[YAW] - self->s.angles[YAW]) > 0.5f)
     {
         VectorCopy(newOrigin, self->s.origin);
-        self->s.pos.trType = TR_STATIONARY;
+        self->s.pos.trType = TR_INTERPOLATE;
         VectorCopy(newOrigin, self->s.pos.trBase);
 
-        self->s.apos.trType = TR_STATIONARY; // no interpolation for angles
+        self->s.apos.trType = TR_INTERPOLATE; 
         self->s.apos.trTime = level.time;
         self->s.apos.trBase[YAW] = self->s.angles[YAW];
         AssertEntityStateValid(self);
@@ -587,8 +587,8 @@ static qboolean AI_StepDirection(gentity_t* self, float yawDeg, float dist) {
         VectorCopy(self->r.currentOrigin, downEnd);
         downEnd[2] -= 64.0f; // probe down a bit
         trap_Trace(&tr, self->r.currentOrigin, self->r.mins, self->r.maxs, downEnd, self->s.number, clipmask);
-        G_Printf("trace endpos: %.2f %.2f %.2f fraction: %.2f\n",
-            tr.endpos[0], tr.endpos[1], tr.endpos[2], tr.fraction);
+        //G_Printf("trace endpos: %.2f %.2f %.2f fraction: %.2f\n",
+         //   tr.endpos[0], tr.endpos[1], tr.endpos[2], tr.fraction);
         if (tr.fraction < 1.0f) {
             // Snap to ground contact
             self->r.currentOrigin[2] = tr.endpos[2];
@@ -618,7 +618,7 @@ static qboolean AI_StepDirection(gentity_t* self, float yawDeg, float dist) {
         fabs(self->s.angles[YAW] - self->s.apos.trBase[YAW]) > 0.5f)
     {
         VectorCopy(self->r.currentOrigin, self->s.origin);
-        self->s.pos.trType = TR_STATIONARY;
+        self->s.pos.trType = TR_INTERPOLATE;
         VectorCopy(self->r.currentOrigin, self->s.pos.trBase);
         AssertEntityStateValid(self);
         // keep angles already set above
@@ -721,20 +721,20 @@ qboolean AI_MoveToGoal(gentity_t* self, float dist) {
     // Require a goalentity like Q1 (in Q1 they compare to world; here just check non-NULL)
     if (!self->monsterinfo || !self->monsterinfo->goalentity)
     {
-        G_Printf("movetogoal: no goalentity set\n");
+        //G_Printf("movetogoal: no goalentity set\n");
 	    return qfalse;
     }
-    G_Printf("movetogoal start: self=%i goal=%i\n",
-        self->s.number,
-        self->monsterinfo->goalentity->s.number);
+    //G_Printf("movetogoal start: self=%i goal=%i\n",
+    //    self->s.number,
+    //    self->monsterinfo->goalentity->s.number);
     goal = self->monsterinfo->goalentity;
 
     // Emulate Q1 "must be on ground/fly/swim". If you track FL_ONGROUND:
     onGroundOrFree = ((self->monsterinfo->flags & (MONFL_ONGROUND | MONFL_FLY | MONFL_SWIM)) != 0);
     if (!onGroundOrFree) {
-        G_Printf("movetogoal not on ground: self=%i goal=%i\n",
-            self->s.number,
-            self->monsterinfo->goalentity->s.number);
+        //G_Printf("movetogoal not on ground: self=%i goal=%i\n",
+        //    self->s.number,
+        //    self->monsterinfo->goalentity->s.number);
         // Allow “free fall” AI to be idle; just bail this frame
         return qfalse;
     }
@@ -742,9 +742,9 @@ qboolean AI_MoveToGoal(gentity_t* self, float dist) {
     // If the next step hits the enemy/goal, return immediately
     closeToEnemy = AI_CloseEnough(self, goal, dist);
     if (closeToEnemy) {
-        G_Printf("movetogoal too close to enemy: self=%i goal=%i\n",
-            self->s.number,
-            self->monsterinfo->goalentity->s.number);
+        //G_Printf("movetogoal too close to enemy: self=%i goal=%i\n",
+        //    self->s.number,
+         //   self->monsterinfo->goalentity->s.number);
         return qfalse;
     }
 
@@ -755,7 +755,7 @@ qboolean AI_MoveToGoal(gentity_t* self, float dist) {
 
 
     VectorCopy(self->r.currentOrigin, self->s.pos.trBase);
-    self->s.apos.trType = TR_STATIONARY; // angles won't be interpolated
+    self->s.apos.trType = TR_INTERPOLATE; 
     self->s.apos.trTime = level.time;
     self->s.apos.trBase[YAW] = self->s.angles[YAW];
     return qtrue;
@@ -816,8 +816,8 @@ void Monster_DropToFloor(gentity_t* ent) {
 
     }
     else {
-        G_Printf("Monster failed to drop to floor at %.1f %.1f %.1f\n",
-            ent->s.origin[0], ent->s.origin[1], ent->s.origin[2]);
+        //G_Printf("Monster failed to drop to floor at %.1f %.1f %.1f\n",
+         //   ent->s.origin[0], ent->s.origin[1], ent->s.origin[2]);
     }
 }
 
@@ -895,8 +895,8 @@ void WalkMonsterStart(gentity_t* self) {
             }
         }
         else {
-            G_Printf("Monster can't find target at: %.2f %.2f %.2f\n",
-                self->s.origin[0], self->s.origin[1], self->s.origin[2]);
+            //G_Printf("Monster can't find target at: %.2f %.2f %.2f\n",
+              //  self->s.origin[0], self->s.origin[1], self->s.origin[2]);
         }
     }
     else if (self->monsterinfo && self->monsterinfo->th_stand) {

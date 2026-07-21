@@ -174,10 +174,16 @@ static void CG_General( centity_t *cent ) {
 
 	// set frame
 
-	ent.frame = s1->frame;
-	ent.oldframe = ent.frame;
-	ent.backlerp = 0;
-
+	if (cg_monsterInterpolate.integer == 1) {
+		ent.frame = cent->nextState.frame;
+		ent.oldframe = s1->frame;
+		ent.backlerp = 1 - cg.frameInterpolation;
+	}
+	else {
+		ent.frame = s1->frame;
+		ent.oldframe = ent.frame;
+		ent.backlerp = 0;
+	}
 	VectorCopy( cent->lerpOrigin, ent.origin);
 	VectorCopy( cent->lerpOrigin, ent.oldorigin);
 

@@ -212,8 +212,8 @@ static qboolean grunt_check(gentity_t* self, range_t enemy_range)
     trap_Trace(&tr, spot1, vec3_origin, vec3_origin, spot2, self->s.number, CONTENTS_SOLID);
     VectorSubtract(spot1, spot2, delta);
     r = VectorLength(delta);
-    G_Printf("spot1 %.1f %.1f %.1f spot2 %.1f %.1f %.1f r %.1f\n",
-    spot1[0], spot1[1], spot1[2], spot2[0], spot2[1], spot2[2], r);
+    //G_Printf("spot1 %.1f %.1f %.1f spot2 %.1f %.1f %.1f r %.1f\n",
+    //spot1[0], spot1[1], spot1[2], spot2[0], spot2[1], spot2[2], r);
     // check trace results
     // if (tr.inopen && tr.inwater)
     //     return qfalse; // line crosses contents
