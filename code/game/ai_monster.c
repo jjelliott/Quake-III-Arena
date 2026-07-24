@@ -866,7 +866,13 @@ void WalkMonsterStart(gentity_t* self) {
     // }
 
     self->takedamage = qtrue;
-    // self->ideal_yaw = self->s.angles[1];
+
+    self->monsterinfo->ideal_yaw = self->s.angles[YAW];
+    self->s.apos.trType = TR_STATIONARY;
+    self->s.apos.trTime = level.time;
+    VectorCopy(self->s.angles, self->s.apos.trBase);
+    VectorCopy(self->s.angles, self->r.currentAngles);
+    trap_LinkEntity(self);
 
     if (!self->monsterinfo->yaw_speed)
         self->monsterinfo->yaw_speed = 20;
