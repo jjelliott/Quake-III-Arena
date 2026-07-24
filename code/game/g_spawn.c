@@ -116,7 +116,7 @@ field_t fields[] = {
 	{"angle", FOFS(s.angles), F_ANGLEHACK},
 	{"targetShaderName", FOFS(targetShaderName), F_LSTRING},
 	{"targetShaderNewName", FOFS(targetShaderNewName), F_LSTRING},
-
+	{"map", FOFS(map), F_LSTRING},
 	{NULL}
 };
 
@@ -164,6 +164,7 @@ void SP_target_kill (gentity_t *ent);
 void SP_target_position (gentity_t *ent);
 void SP_target_location (gentity_t *ent);
 void SP_target_push (gentity_t *ent);
+void SP_target_changelevel(gentity_t* ent);
 
 void SP_light (gentity_t *self);
 void SP_info_null (gentity_t *self);
@@ -243,6 +244,7 @@ spawn_t	spawns[] = {
 	{"target_position", SP_target_position},
 	{"target_location", SP_target_location},
 	{"target_push", SP_target_push},
+	{"target_changelevel", SP_target_changelevel},
 
 	{"light", SP_light},
 	{"path_corner", SP_path_corner},

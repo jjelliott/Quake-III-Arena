@@ -224,6 +224,8 @@ struct gentity_s {
 	gitem_t		*item;			// for bonus items
 	monsterinfo_t* monsterinfo;
 	float show_hostile;   // time until monsters consider this hostile
+
+	char *map;
 };
 
 
