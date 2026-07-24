@@ -499,12 +499,19 @@ respawn
 void respawn( gentity_t *ent ) {
 	gentity_t	*tent;
 
+	if (g_gametype.integer == GT_SINGLE_PLAYER) {
+		G_Printf("sorry you're dead, sucks to suck");
+	}
+	else {
+
+	
 	CopyToBodyQue (ent);
 	ClientSpawn(ent);
 
 	// add a teleportation effect
 	tent = G_TempEntity( ent->client->ps.origin, EV_PLAYER_TELEPORT_IN );
 	tent->s.clientNum = ent->s.clientNum;
+	}
 }
 
 /*
