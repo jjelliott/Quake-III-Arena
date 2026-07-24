@@ -2150,7 +2150,7 @@ static qboolean CG_DrawScoreboard() {
 	}
 
 	// should never happen in Team Arena
-	if (cgs.gametype == GT_SINGLE_PLAYER && cg.predictedPlayerState.pm_type == PM_INTERMISSION ) {
+	if (cgs.gametype == GT_BOTLADDER && cg.predictedPlayerState.pm_type == PM_INTERMISSION ) {
 		cg.deferredPlayerLoading = 0;
 		firstTime = qtrue;
 		return qfalse;
@@ -2217,7 +2217,7 @@ static void CG_DrawIntermission( void ) {
 	//	return;
 	//}
 #else
-	if ( cgs.gametype == GT_SINGLE_PLAYER ) {
+	if ( cgs.gametype == GT_BOTLADDER ) {
 		CG_DrawCenterString();
 		return;
 	}

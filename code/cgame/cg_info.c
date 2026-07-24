@@ -130,7 +130,7 @@ void CG_LoadingClient( int clientNum ) {
 	Q_strncpyz( personality, Info_ValueForKey( info, "n" ), sizeof(personality) );
 	Q_CleanStr( personality );
 
-	if( cgs.gametype == GT_SINGLE_PLAYER ) {
+	if( cgs.gametype == GT_BOTLADDER ) {
 		trap_S_RegisterSound( va( "sound/player/announce/%s.wav", personality ), qtrue );
 	}
 
@@ -238,7 +238,7 @@ void CG_DrawInformation( void ) {
 	case GT_FFA:
 		s = "Free For All";
 		break;
-	case GT_SINGLE_PLAYER:
+	case GT_BOTLADDER:
 		s = "Single Player";
 		break;
 	case GT_TOURNAMENT:
