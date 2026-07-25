@@ -677,6 +677,7 @@ qboolean	BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
 typedef enum {
 	ET_GENERAL,
 	ET_PLAYER,
+	ET_MONSTER,
 	ET_ITEM,
 	ET_MISSILE,
 	ET_MOVER,
@@ -689,10 +690,9 @@ typedef enum {
 	ET_GRAPPLE,				// grapple hooked on wall
 	ET_TEAM,
 
-	ET_EVENTS,				// any of the EV_* events can be added freestanding
+	ET_EVENTS				// any of the EV_* events can be added freestanding
 							// by setting eType to ET_EVENTS + eventNum
 							// this avoids having to set eFlags and eventNum
-	ET_MONSTER
 } entityType_t;
 
 

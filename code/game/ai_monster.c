@@ -854,6 +854,9 @@ void WalkMonsterStart(gentity_t* self) {
         G_Printf("WalkMonsterStart: entity %i has no monsterinfo\n", self->s.number);
         return;
     }
+
+    self->s.eType = ET_MONSTER;
+
     // raise off floor a bit
     self->s.origin[2] += 1;
     Monster_DropToFloor(self);
