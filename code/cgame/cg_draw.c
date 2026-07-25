@@ -1529,7 +1529,7 @@ static void CG_DrawReward( void ) {
 			cg.rewardTime = cg.time;
 			cg.rewardStack--;
 			color = CG_FadeColor( cg.rewardTime, REWARD_TIME );
-			trap_S_StartLocalSound(cg.rewardSound[0], CHAN_ANNOUNCER);
+			CG_PlayAnnouncerSound(cg.rewardSound[0]);
 		} else {
 			return;
 		}
@@ -2426,13 +2426,13 @@ static void CG_DrawWarmup( void ) {
 		cg.warmupCount = sec;
 		switch ( sec ) {
 		case 0:
-			trap_S_StartLocalSound( cgs.media.count1Sound, CHAN_ANNOUNCER );
+			CG_PlayAnnouncerSound(cgs.media.count1Sound);
 			break;
 		case 1:
-			trap_S_StartLocalSound( cgs.media.count2Sound, CHAN_ANNOUNCER );
+			CG_PlayAnnouncerSound(cgs.media.count2Sound);
 			break;
 		case 2:
-			trap_S_StartLocalSound( cgs.media.count3Sound, CHAN_ANNOUNCER );
+			CG_PlayAnnouncerSound(cgs.media.count3Sound);
 			break;
 		default:
 			break;

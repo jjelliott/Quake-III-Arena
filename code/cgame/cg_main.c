@@ -1997,3 +1997,10 @@ void CG_MouseEvent(int x, int y) {
 }
 #endif
 
+void CG_PlayAnnouncerSound(sfxHandle_t sfx)
+{
+	if (cgs.gametype != GT_SINGLE_PLAYER && cgs.gametype != GT_COOP)
+	{
+		trap_S_StartLocalSound(sfx, CHAN_ANNOUNCER);
+	}
+}
