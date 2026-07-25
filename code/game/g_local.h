@@ -281,6 +281,18 @@ typedef struct {
 	int			spectatorClient;	// for chasecam and follow mode
 	int			wins, losses;		// tournament stats
 	qboolean	teamLeader;			// true when this client is a team leader
+
+	int health;
+	int armor;
+	int weapons;
+	int mgAmmo;
+	int sgAmmo;
+	int glAmmo;
+	int rlAmmo;
+	int pgAmmo;
+	int lgAmmo;
+	int rgAmmo;
+	int bfgAmmo;
 } clientSession_t;
 
 //
@@ -453,6 +465,7 @@ typedef struct {
 										// kills during this delay
 	int			intermissiontime;		// time the intermission was started
 	char		*changemap;
+	qboolean	fromChangeLevel;		// map was entered via changelevel
 	qboolean	readyToExit;			// at least one client wants to exit
 	int			exitTime;
 	vec3_t		intermission_origin;	// also used for spectator spawns

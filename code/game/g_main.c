@@ -81,6 +81,7 @@ vmCvar_t	pmove_fixed;
 vmCvar_t	pmove_msec;
 vmCvar_t	g_rankings;
 vmCvar_t	g_listEntity;
+vmCvar_t	sv_levelTransition;
 #ifdef MISSIONPACK
 vmCvar_t	g_obeliskHealth;
 vmCvar_t	g_obeliskRegenPeriod;
@@ -107,8 +108,8 @@ static cvarTable_t		gameCvarTable[] = {
 	{ NULL, "sv_mapname", "", CVAR_SERVERINFO | CVAR_ROM, 0, qfalse  },
 
 	// latched vars
-	{ &g_gametype, "g_gametype", "0", CVAR_SERVERINFO | CVAR_USERINFO | CVAR_LATCH, 0, qfalse  },
-
+	{ &g_gametype, "g_gametype", "3", CVAR_SERVERINFO | CVAR_USERINFO | CVAR_LATCH, 0, qfalse  },
+	{ &sv_levelTransition, "sv_levelTransition", "0", CVAR_SERVERINFO | CVAR_LATCH, 0, qfalse  },
 	{ &g_maxclients, "sv_maxclients", "8", CVAR_SERVERINFO | CVAR_LATCH | CVAR_ARCHIVE, 0, qfalse  },
 	{ &g_maxGameClients, "g_maxGameClients", "0", CVAR_SERVERINFO | CVAR_LATCH | CVAR_ARCHIVE, 0, qfalse  },
 
@@ -359,7 +360,7 @@ void G_RegisterCvars( void ) {
 	// check some things
 	if ( g_gametype.integer < 0 || g_gametype.integer >= GT_MAX_GAME_TYPE ) {
 		G_Printf( "g_gametype %i is out of range, defaulting to 0\n", g_gametype.integer );
-		trap_Cvar_Set( "g_gametype", "0" );
+		trap_Cvar_Set( "g_gametype", "3" );
 	}
 
 	level.warmupModificationCount = g_warmup.modificationCount;
@@ -425,6 +426,11 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 	memset( &level, 0, sizeof( level ) );
 	level.time = levelTime;
 	level.startTime = levelTime;
+
+	if (sv_levelTransition.integer == 1) {
+		level.fromChangeLevel = qtrue;
+		trap_Cvar_Set("sv_levelTransition", 0);
+	}
 
 	level.snd_fry = G_SoundIndex("sound/player/fry.wav");	// FIXME standing in lava / slime
 
@@ -1009,6 +1015,34 @@ void BeginIntermission( void ) {
 
 }
 
+/*
+=============
+SpReloadLevel
+
+Similar to ExitLevel, but intentionally retains previous session
+so the experience is essentially a Q2 "Entering {mapname}" save. 
+
+=============
+*/
+void SpReloadLevel(void) {
+	int		i;
+	gclient_t* cl;
+
+
+
+	trap_SendConsoleCommand(EXEC_APPEND, "vstr nextmap\n");
+	level.changemap = NULL;
+	level.intermissiontime = 0;
+
+	// change all client states to connecting, so the early players into the
+	// next level will know the others aren't done reconnecting
+	for (i = 0; i < g_maxclients.integer; i++) {
+		if (level.clients[i].pers.connected == CON_CONNECTED) {
+			level.clients[i].pers.connected = CON_CONNECTING;
+		}
+	}
+
+}
 
 /*
 =============

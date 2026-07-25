@@ -466,7 +466,10 @@ void SP_target_location( gentity_t *self ){
 }
 
 void target_changelevel_use(gentity_t* self, gentity_t* other, gentity_t* activator) {
-	trap_Cvar_Set("nextmap", va("map %s", self->map));
+	if (g_cheats.integer == 1)
+		trap_Cvar_Set("nextmap", va("set sv_levelTransition 1;devmap %s", self->map));
+	else
+		trap_Cvar_Set("nextmap", va("set sv_levelTransition 1;map %s", self->map));
 	BeginIntermission();
 	trap_SendServerCommand(-1, va("print \"%s" S_COLOR_WHITE " exited the map.\n\"",
 		activator->client->pers.netname));

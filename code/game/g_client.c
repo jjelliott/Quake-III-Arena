@@ -498,9 +498,21 @@ respawn
 */
 void respawn( gentity_t *ent ) {
 	gentity_t	*tent;
+	char		map[MAX_QPATH];
+	char		serverinfo[MAX_INFO_STRING];
 
 	if (g_gametype.integer == GT_SINGLE_PLAYER) {
-		G_Printf("sorry you're dead, sucks to suck");
+
+		trap_GetServerinfo(serverinfo, sizeof(serverinfo));
+		Q_strncpyz(map, Info_ValueForKey(serverinfo, "mapname"), sizeof(map));
+
+		G_Printf("should now change to %s", map);
+		if (g_cheats.integer == 1)
+			trap_Cvar_Set("nextmap", va("set sv_levelTransition 1;devmap %s", map));
+		else
+			trap_Cvar_Set("nextmap", va("set sv_levelTransition 1;map %s", map));
+			
+		SpReloadLevel();
 	}
 	else {
 
@@ -1183,7 +1195,12 @@ void ClientSpawn(gentity_t *ent) {
 
 	client->ps.clientNum = index;
 
-	client->ps.stats[STAT_WEAPONS] = ( 1 << WP_MACHINEGUN );
+	if (level.fromChangeLevel && client->sess.weapons != 0) {
+		client->ps.stats[STAT_WEAPONS] = client->sess.weapons;
+	}
+	else {
+		client->ps.stats[STAT_WEAPONS] = (1 << WP_MACHINEGUN);
+	}
 	if ( g_gametype.integer == GT_TEAM ) {
 		client->ps.ammo[WP_MACHINEGUN] = 50;
 	} else {
@@ -1195,7 +1212,13 @@ void ClientSpawn(gentity_t *ent) {
 	client->ps.ammo[WP_GRAPPLING_HOOK] = -1;
 
 	// health will count down towards max_health
-	ent->health = client->ps.stats[STAT_HEALTH] = client->ps.stats[STAT_MAX_HEALTH] + 25;
+	if (level.fromChangeLevel && client->sess.health != 0)
+		ent->health = client->ps.stats[STAT_HEALTH] = client->sess.health;
+	else 
+		ent->health = client->ps.stats[STAT_HEALTH] = client->ps.stats[STAT_MAX_HEALTH] + 25;
+
+	if (level.fromChangeLevel && client->sess.armor > 0)
+		client->ps.stats[STAT_ARMOR] = client->sess.armor;
 
 	G_SetOrigin( ent, spawn_origin );
 	VectorCopy( spawn_origin, client->ps.origin );

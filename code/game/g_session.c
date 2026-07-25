@@ -22,7 +22,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //
 #include "g_local.h"
 
-
+#ifndef min
+#define min(a, b)	(a) < (b) ? a : b
+#endif
+#ifndef max
+#define max(a, b)	(a) > (b) ? a : b
+#endif
 /*
 =======================================================================
 
@@ -32,7 +37,7 @@ Session data is the only data that stays persistant across level loads
 and tournament restarts.
 =======================================================================
 */
-
+#define SESSION_FORMAT_STRING "%i %i %i %i %i %i %i %i %i %i"
 /*
 ================
 G_WriteClientSessionData
@@ -44,14 +49,19 @@ void G_WriteClientSessionData( gclient_t *client ) {
 	const char	*s;
 	const char	*var;
 
-	s = va("%i %i %i %i %i %i %i", 
+
+	s = va(SESSION_FORMAT_STRING,
 		client->sess.sessionTeam,
 		client->sess.spectatorTime,
 		client->sess.spectatorState,
 		client->sess.spectatorClient,
 		client->sess.wins,
 		client->sess.losses,
-		client->sess.teamLeader
+		client->sess.teamLeader,
+
+		client->ps.stats[STAT_HEALTH] > 0 ? min(max(client->ps.stats[STAT_HEALTH], 50), 100) : 0,
+		client->ps.stats[STAT_ARMOR],
+		client->ps.stats[STAT_WEAPONS]
 		);
 
 	var = va( "session%i", client - level.clients );
@@ -78,14 +88,18 @@ void G_ReadSessionData( gclient_t *client ) {
 	var = va( "session%i", client - level.clients );
 	trap_Cvar_VariableStringBuffer( var, s, sizeof(s) );
 
-	sscanf( s, "%i %i %i %i %i %i %i",
+	sscanf(s, SESSION_FORMAT_STRING,
 		&sessionTeam,                 // bk010221 - format
 		&client->sess.spectatorTime,
 		&spectatorState,              // bk010221 - format
 		&client->sess.spectatorClient,
 		&client->sess.wins,
 		&client->sess.losses,
-		&teamLeader                   // bk010221 - format
+		&teamLeader,                   // bk010221 - format
+
+		&client->sess.health,
+		&client->sess.armor,
+		&client->sess.weapons
 		);
 
 	// bk001205 - format issues
