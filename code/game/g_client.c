@@ -500,17 +500,17 @@ void respawn( gentity_t *ent ) {
 	gentity_t	*tent;
 	char		map[MAX_QPATH];
 	char		serverinfo[MAX_INFO_STRING];
-
+	char		*mapCmd;
+	char		*transitionCmd;
 	if (g_gametype.integer == GT_SINGLE_PLAYER) {
 
 		trap_GetServerinfo(serverinfo, sizeof(serverinfo));
 		Q_strncpyz(map, Info_ValueForKey(serverinfo, "mapname"), sizeof(map));
 
 		G_Printf("should now change to %s", map);
-		if (g_cheats.integer == 1)
-			trap_Cvar_Set("nextmap", va("set sv_levelTransition 1;devmap %s", map));
-		else
-			trap_Cvar_Set("nextmap", va("set sv_levelTransition 1;map %s", map));
+		mapCmd = g_cheats.integer == 1 ? "devmap" : "map";
+		transitionCmd = level.fromChangeLevel ? "set sv_levelTransition 1;" : "";
+		trap_Cvar_Set("nextmap", va("%s%s %s", transitionCmd, mapCmd, map));
 			
 		SpReloadLevel();
 	}
