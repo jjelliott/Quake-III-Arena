@@ -1201,7 +1201,17 @@ void ClientSpawn(gentity_t *ent) {
 	else {
 		client->ps.stats[STAT_WEAPONS] = (1 << WP_MACHINEGUN);
 	}
-	if ( g_gametype.integer == GT_TEAM ) {
+
+	if (level.fromChangeLevel) {
+		client->ps.ammo[WP_MACHINEGUN] = client->sess.mgAmmo;
+		client->ps.ammo[WP_SHOTGUN]	= client->sess.sgAmmo;
+		client->ps.ammo[WP_GRENADE_LAUNCHER] = client->sess.glAmmo;
+		client->ps.ammo[WP_ROCKET_LAUNCHER] = client->sess.rlAmmo;
+		client->ps.ammo[WP_LIGHTNING] = client->sess.lgAmmo;
+		client->ps.ammo[WP_RAILGUN] = client->sess.rgAmmo;
+		client->ps.ammo[WP_PLASMAGUN] = client->sess.pgAmmo;
+		client->ps.ammo[WP_BFG] = client->sess.bfgAmmo;
+	} else if ( g_gametype.integer == GT_TEAM ) {
 		client->ps.ammo[WP_MACHINEGUN] = 50;
 	} else {
 		client->ps.ammo[WP_MACHINEGUN] = 100;

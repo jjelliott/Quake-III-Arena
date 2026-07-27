@@ -37,7 +37,7 @@ Session data is the only data that stays persistant across level loads
 and tournament restarts.
 =======================================================================
 */
-#define SESSION_FORMAT_STRING "%i %i %i %i %i %i %i %i %i %i"
+#define SESSION_FORMAT_STRING "%i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i"
 /*
 ================
 G_WriteClientSessionData
@@ -61,7 +61,15 @@ void G_WriteClientSessionData( gclient_t *client ) {
 
 		client->ps.stats[STAT_HEALTH] > 0 ? min(max(client->ps.stats[STAT_HEALTH], 50), 100) : 0,
 		client->ps.stats[STAT_ARMOR],
-		client->ps.stats[STAT_WEAPONS]
+		client->ps.stats[STAT_WEAPONS],
+		client->ps.ammo[WP_MACHINEGUN],
+		client->ps.ammo[WP_SHOTGUN],
+		client->ps.ammo[WP_GRENADE_LAUNCHER],
+		client->ps.ammo[WP_ROCKET_LAUNCHER],
+		client->ps.ammo[WP_LIGHTNING],
+		client->ps.ammo[WP_RAILGUN],
+		client->ps.ammo[WP_PLASMAGUN],
+		client->ps.ammo[WP_BFG]
 		);
 
 	var = va( "session%i", client - level.clients );
@@ -99,7 +107,15 @@ void G_ReadSessionData( gclient_t *client ) {
 
 		&client->sess.health,
 		&client->sess.armor,
-		&client->sess.weapons
+		&client->sess.weapons,
+		&client->sess.mgAmmo,
+		&client->sess.sgAmmo,
+		&client->sess.glAmmo,
+		&client->sess.rlAmmo,
+		&client->sess.lgAmmo,
+		&client->sess.rgAmmo,
+		&client->sess.pgAmmo,
+		&client->sess.bfgAmmo
 		);
 
 	// bk001205 - format issues
