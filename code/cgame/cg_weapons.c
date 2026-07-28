@@ -2000,7 +2000,6 @@ static void CG_ShotgunPellet( vec3_t start, vec3_t end, int skipNum ) {
 	int sourceContentType, destContentType;
 
 	CG_Trace( &tr, start, NULL, NULL, end, skipNum, MASK_SHOT );
-
 	sourceContentType = trap_CM_PointContents( start, 0 );
 	destContentType = trap_CM_PointContents( tr.endpos, 0 );
 
