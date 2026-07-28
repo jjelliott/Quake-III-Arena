@@ -429,7 +429,7 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 
 	if (sv_levelTransition.integer == 1) {
 		level.fromChangeLevel = qtrue;
-		trap_Cvar_Set("sv_levelTransition", 0);
+		trap_Cvar_Set("sv_levelTransition", "0");
 	}
 
 	level.snd_fry = G_SoundIndex("sound/player/fry.wav");	// FIXME standing in lava / slime
