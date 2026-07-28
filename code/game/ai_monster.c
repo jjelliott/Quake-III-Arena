@@ -824,14 +824,13 @@ void Monster_DropToFloor(gentity_t* ent) {
 
 void Monster_Die(gentity_t* self, gentity_t* inflictor, gentity_t* attacker, int damage, int mod) {
     // play death animation, drop loot, etc.
-    self->takedamage = qfalse;
-    self->r.contents = 0;        // not solid to anything
-    self->clipmask = 0;          // doesn’t collide when tracing against world
     AssertEntityStateValid(self);
-    trap_LinkEntity(self);
 
     if (self->monsterinfo && self->monsterinfo->th_die)
         self->monsterinfo->th_die(self, inflictor, attacker, damage, mod);
+
+    self->takedamage = qfalse;
+    
 }
 
 void Monster_Pain(gentity_t* self, gentity_t* attacker, int damage)
@@ -845,6 +844,13 @@ void Monster_Pain(gentity_t* self, gentity_t* attacker, int damage)
     }
     if (self->monsterinfo->th_pain)
         self->monsterinfo->th_pain(self, attacker, damage);
+}
+
+void Monster_BecomeNonsolid(gentity_t* self) {
+    // following three lines are equivalent to the self.solid = SOLID_NOT in quakec code
+    self->r.contents = 0;        // not solid to anything
+    self->clipmask = 0;          // doesn’t collide when tracing against world
+    trap_LinkEntity(self);
 }
 
 // Reusable WalkMonsterStart
@@ -869,7 +875,7 @@ void WalkMonsterStart(gentity_t* self) {
     // }
 
     self->takedamage = qtrue;
-
+    
     self->monsterinfo->ideal_yaw = self->s.angles[YAW];
     self->s.apos.trType = TR_STATIONARY;
     self->s.apos.trTime = level.time;

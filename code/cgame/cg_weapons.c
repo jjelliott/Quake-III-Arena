@@ -2025,7 +2025,7 @@ static void CG_ShotgunPellet( vec3_t start, vec3_t end, int skipNum ) {
 		return;
 	}
 
-	if ( cg_entities[tr.entityNum].currentState.eType == ET_PLAYER ) {
+	if ( cg_entities[tr.entityNum].currentState.eType == ET_PLAYER  || cg_entities[tr.entityNum].currentState.eType == ET_MONSTER) {
 		CG_MissileHitPlayer( WP_SHOTGUN, tr.endpos, tr.plane.normal, tr.entityNum );
 	} else {
 		if ( tr.surfaceFlags & SURF_NOIMPACT ) {

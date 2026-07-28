@@ -92,7 +92,9 @@ FRAME(grunt_painc13, PAINC13, grunt_run1, {  })
 
 FRAME(grunt_die1, DEATH1, grunt_die2, {  })
 FRAME(grunt_die2, DEATH2, grunt_die3, {  })
-FRAME(grunt_die3, DEATH3, grunt_die4, { /*self.solid = SOLID_NOT; self.ammo_shells = 5; DropBackpack();*/ })
+FRAME(grunt_die3, DEATH3, grunt_die4, { /*self.solid = SOLID_NOT; self.ammo_shells = 5; DropBackpack();*/ 
+	Monster_BecomeNonsolid(self);
+})
 FRAME(grunt_die4, DEATH4, grunt_die5, {  })
 FRAME(grunt_die5, DEATH5, grunt_die6, {  })
 FRAME(grunt_die6, DEATH6, grunt_die7, {  })
@@ -103,7 +105,9 @@ FRAME(grunt_die10, DEATH10, grunt_die10, {  })
 
 FRAME(grunt_cdie1, DEATHC1, grunt_cdie2, {  })
 FRAME(grunt_cdie2, DEATHC2, grunt_cdie3, { /*ai_back(5);*/ })
-FRAME(grunt_cdie3, DEATHC3, grunt_cdie4, { /*self.solid = SOLID_NOT; self.ammo_shells = 5; DropBackpack(); ai_back(4);*/ })
+FRAME(grunt_cdie3, DEATHC3, grunt_cdie4, { /*self.solid = SOLID_NOT; self.ammo_shells = 5; DropBackpack(); ai_back(4);*/ 
+	Monster_BecomeNonsolid(self);
+})
 FRAME(grunt_cdie4, DEATHC4, grunt_cdie5, { /*ai_back(13);*/ })
 FRAME(grunt_cdie5, DEATHC5, grunt_cdie6, { /*ai_back(3);*/ })
 FRAME(grunt_cdie6, DEATHC6, grunt_cdie7, { /*ai_back(4);*/ })
