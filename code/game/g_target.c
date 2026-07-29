@@ -470,12 +470,35 @@ void target_changelevel_use(gentity_t* self, gentity_t* other, gentity_t* activa
 		trap_Cvar_Set("nextmap", va("set sv_levelTransition 1;devmap %s", self->map));
 	else
 		trap_Cvar_Set("nextmap", va("set sv_levelTransition 1;map %s", self->map));
-	BeginIntermission();
 	trap_SendServerCommand(-1, va("print \"%s" S_COLOR_WHITE " exited the map.\n\"",
 		activator->client->pers.netname));
+	trap_SetConfigstring(CS_MUSIC, "music/intermission.wav");
+	BeginIntermission();
 	return;
 }
 
 void SP_target_changelevel(gentity_t *self) {
 	self->use = target_changelevel_use;
+}
+
+void Secret_IncreaseCount(void) {
+	level.secretsTotal++;
+	trap_SetConfigstring(CS_SECRETS_TOTAL, va("%i", level.secretsTotal));
+}
+
+void Secret_MarkFound(void) {
+	level.secretsFound++;
+	trap_SetConfigstring(CS_SECRETS_FOUND, va("%i", level.secretsFound));
+}
+
+void target_secret_use(gentity_t* self, gentity_t* other, gentity_t* activator) {
+	// todo: play sound
+	Secret_MarkFound();
+	G_UseTargets(self, activator);
+	G_FreeEntity(self);
+}
+
+void SP_target_secret(gentity_t* self) {
+	self->use = target_secret_use;
+	Secret_IncreaseCount();
 }
