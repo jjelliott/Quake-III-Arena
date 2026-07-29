@@ -290,6 +290,9 @@ void SP_monster_grunt_q1(gentity_t* self) {
     VectorSet(self->monsterinfo->view_ofs, 0, 0, 24 );
     // self->s.pos.trBase[2] += 8; // raise 16 units for rendering
     trap_LinkEntity(self);
+    /*
     self->think = WalkMonsterStart;
     self->nextthink = level.time + 1;
+    */
+    WalkMonsterStart(self);
 }
