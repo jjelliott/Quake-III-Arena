@@ -303,7 +303,48 @@ qboolean CG_DrawOldScoreboard( void ) {
 		}
 		fade = *fadeColor;
 	}
+	if (cgs.gametype == GT_SINGLE_PLAYER)
+	{
+		if (cg.predictedPlayerState.pm_type == PM_INTERMISSION) {
+			s = va("Completed",
+				atoi(CG_ConfigString(CS_MONSTERS_KILLED)), atoi(CG_ConfigString(CS_MONSTERS_TOTAL)));
+			w = CG_DrawStrlen(s) * BIGCHAR_WIDTH;
+			x = (SCREEN_WIDTH - w) / 2;
+			y = SCREEN_HEIGHT / 4;
+			CG_DrawBigString(x, y, s, fade);
+			s = va("%s",
+				CG_ConfigString(CS_MESSAGE));
+			w = CG_DrawStrlen(s) * SMALLCHAR_WIDTH;
+			x = (SCREEN_WIDTH - w) / 2;
+			y = (SCREEN_HEIGHT / 4) + 20;
+			CG_DrawSmallString(x, y, s, fade);
 
+			s = va("Kills %i / %i",
+				atoi(CG_ConfigString(CS_MONSTERS_KILLED)), atoi(CG_ConfigString(CS_MONSTERS_TOTAL)));
+			w = CG_DrawStrlen(s) * BIGCHAR_WIDTH;
+			x = (SCREEN_WIDTH - w) / 2;
+			y = (SCREEN_HEIGHT / 2) - 25;
+			CG_DrawBigString(x, y, s, fade);
+
+			s = va("Secrets %i / %i",
+				atoi(CG_ConfigString(CS_SECRETS_FOUND)), atoi(CG_ConfigString(CS_SECRETS_TOTAL)));
+			w = CG_DrawStrlen(s) * BIGCHAR_WIDTH;
+			x = (SCREEN_WIDTH - w) / 2;
+			y = (SCREEN_HEIGHT / 2);
+			CG_DrawBigString(x, y, s, fade);
+
+			s = va("Time %s",
+				CG_ConfigString(CS_FINAL_TIME));
+			w = CG_DrawStrlen(s) * BIGCHAR_WIDTH;
+			x = (SCREEN_WIDTH - w) / 2;
+			y = (SCREEN_HEIGHT / 2) + 25;
+			CG_DrawBigString(x, y, s, fade);
+		}
+		else {
+
+		}
+		return qtrue;
+	}
 
 	// fragged by ... line
 	if ( cg.killerName[0] ) {
