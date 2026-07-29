@@ -479,6 +479,11 @@ typedef struct {
 #ifdef MISSIONPACK
 	int			portalSequence;
 #endif
+
+	int			monstersKilled;
+	int			monstersTotal;
+	int			secretsFound;
+	int			secretsTotal;
 } level_locals_t;
 
 

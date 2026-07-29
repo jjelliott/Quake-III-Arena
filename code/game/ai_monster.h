@@ -85,4 +85,7 @@ void SUB_CheckRefire(gentity_t* self, void thinkFn(gentity_t* nSelf));
 void Monster_Pain(gentity_t* self, gentity_t* attacker, int damage);
 void Monster_Die(gentity_t* self, gentity_t* inflictor, gentity_t* attacker, int damage, int mod);
 void Monster_BecomeNonsolid(gentity_t* self);
+
+void Monster_IncreaseCount(void);
+void Monster_MarkKilled(void);
 #endif // AI_MONSTER_H

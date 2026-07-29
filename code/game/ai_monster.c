@@ -9,6 +9,16 @@ float fmodf(float x, float y) {
 }
 static int checkpvs_client = 0;
 
+void Monster_IncreaseCount(void ) {
+    level.monstersTotal++;
+    trap_SetConfigstring(CS_MONSTERS_TOTAL, va("%i", level.monstersTotal));
+}
+
+void Monster_MarkKilled(void) {
+    level.monstersKilled++;
+    trap_SetConfigstring(CS_MONSTERS_KILLED, va("%i", level.monstersKilled));
+}
+
 gentity_t* checkclient(void) {
     int i;
     gentity_t* ent;
@@ -830,7 +840,7 @@ void Monster_Die(gentity_t* self, gentity_t* inflictor, gentity_t* attacker, int
         self->monsterinfo->th_die(self, inflictor, attacker, damage, mod);
 
     self->takedamage = qfalse;
-    
+    Monster_MarkKilled();
 }
 
 void Monster_Pain(gentity_t* self, gentity_t* attacker, int damage)
@@ -923,6 +933,6 @@ void WalkMonsterStart(gentity_t* self) {
     self->nextthink = level.time + FRAMETIME + random() * 500;
     self->pain = Monster_Pain;
     self->die = Monster_Die;
-    // total_monsters++;
+    Monster_IncreaseCount();
 }
 
