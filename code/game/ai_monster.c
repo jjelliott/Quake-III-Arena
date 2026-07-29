@@ -789,7 +789,6 @@ void AI_InitForEntity(gentity_t* ent) {
 void AI_ClearEntity(gentity_t* ent) {
     if (!ent) return;
 
-    // Do NOT G_FreeEntity here — that deletes the entire game entity.
     if (ent->monsterinfo) {
         memset(ent->monsterinfo, 0, sizeof(monsterinfo_t));
         ent->monsterinfo = NULL;
