@@ -1349,7 +1349,7 @@ void CheckExitRules( void ) {
 #endif
 		return;
 	}
-	if (g_gametype.integer != GT_SINGLE_PLAYER) {
+	if (g_gametype.integer != GT_SINGLE_PLAYER && g_gametype.integer != GT_COOP) {
 		// check for sudden death
 		if (ScoreIsTied()) {
 			// always wait for sudden death
