@@ -1070,6 +1070,10 @@ static float CG_DrawScores( float y ) {
 
 	y1 = y;
 
+	if (cgs.gametype == GT_SINGLE_PLAYER) {
+		return 0;
+	}
+
 	// draw from the right side to left
 	if ( cgs.gametype >= GT_TEAM ) {
 		x = 640;
