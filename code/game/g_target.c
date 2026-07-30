@@ -465,7 +465,33 @@ void SP_target_location( gentity_t *self ){
 	G_SetOrigin( self, self->s.origin );
 }
 
+void RecordFinishTime() {
+	int total, millis, seconds, minutes, hours;
+	char finalString[32];
+	total = level.time - level.startTime;
+
+	millis = total % 1000;
+	seconds = total / 1000;
+	minutes = seconds / 60;
+	hours = minutes / 60;
+
+	minutes = minutes % 60;
+	seconds = seconds % 60;
+	
+	
+	if (hours > 0) {
+		Com_sprintf(finalString, sizeof(finalString), "%i:%02i:%02i.%03i", hours, minutes, seconds, millis);
+		
+	}
+	else {
+		Com_sprintf(finalString, sizeof(finalString), "%02i:%02i.%03i", minutes, seconds, millis);
+	}
+	
+	trap_SetConfigstring(CS_FINAL_TIME, finalString);
+}
+
 void target_changelevel_use(gentity_t* self, gentity_t* other, gentity_t* activator) {
+	RecordFinishTime();
 	if (g_cheats.integer == 1)
 		trap_Cvar_Set("nextmap", va("set sv_levelTransition 1;devmap %s", self->map));
 	else
