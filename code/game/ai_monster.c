@@ -130,7 +130,6 @@ void AssertEntityStateValid(gentity_t* e) {
     if (e->s.number < 0 || e->s.number >= MAX_GENTITIES) {
         G_Error("Invalid s.number for entity %p: %d\n", e, e->s.number);
     }
-    // optional: check modelindex / eType if you suspect garbage
 }
 
 
@@ -305,10 +304,9 @@ void AI_Face(gentity_t* self)
     self->monsterinfo->ideal_yaw = vectoyaw(dir);
     AI_ChangeYaw(self);
 
-    // Prepare the entityState BEFORE linking
+    
     VectorCopy(self->r.currentOrigin, newOrigin);
 
-    // only update network state if origin or yaw changed meaningfully
     if (!VectorCompareEpsilon(self->s.pos.trBase, newOrigin, 0.01f) ||
         fabs(self->s.apos.trBase[YAW] - self->s.angles[YAW]) > 0.5f)
     {
@@ -328,7 +326,7 @@ void AI_Stand(gentity_t* self) {
     if (!self->monsterinfo)
         return;
     if (AI_FindTarget(self)) {
-        return; // target acquired, HuntTarget() is triggered
+        return; 
     }
 
     if (level.time > self->monsterinfo->pausetime) {
@@ -490,14 +488,12 @@ void AI_Run(gentity_t* self, float dist) {
 #define DI_NODIR   (-1.0f)
 #endif
 
-// Quake-style AngleMod in degrees
 static float AI_AngleMod(float a) {
     a = fmodf(a, 360.0f);
     if (a < 0.0f) a += 360.0f;
     return a;
 }
 
-// Compute bbox abs mins/maxs for a gentity at a given origin
 static void AI_AbsBoundsAt(const gentity_t* ent, const vec3_t at, vec3_t outMins, vec3_t outMaxs) {
     outMins[0] = at[0] + ent->r.mins[0];
     outMins[1] = at[1] + ent->r.mins[1];
@@ -508,7 +504,6 @@ static void AI_AbsBoundsAt(const gentity_t* ent, const vec3_t at, vec3_t outMins
     outMaxs[2] = at[2] + ent->r.maxs[2];
 }
 
-// Cheap 2D distance helper
 static float AI_Dist2D(const vec3_t a, const vec3_t b) {
     vec3_t d;
     d[0] = a[0] - b[0];
@@ -728,7 +723,6 @@ qboolean AI_MoveToGoal(gentity_t* self, float dist) {
     qboolean onGroundOrFree;
     qboolean closeToEnemy;
 
-    // Require a goalentity like Q1 (in Q1 they compare to world; here just check non-NULL)
     if (!self->monsterinfo || !self->monsterinfo->goalentity)
     {
         //G_Printf("movetogoal: no goalentity set\n");
@@ -738,18 +732,15 @@ qboolean AI_MoveToGoal(gentity_t* self, float dist) {
     //    self->s.number,
     //    self->monsterinfo->goalentity->s.number);
     goal = self->monsterinfo->goalentity;
-
-    // Emulate Q1 "must be on ground/fly/swim". If you track FL_ONGROUND:
+    
     onGroundOrFree = ((self->monsterinfo->flags & (MONFL_ONGROUND | MONFL_FLY | MONFL_SWIM)) != 0);
     if (!onGroundOrFree) {
         //G_Printf("movetogoal not on ground: self=%i goal=%i\n",
         //    self->s.number,
         //    self->monsterinfo->goalentity->s.number);
-        // Allow “free fall” AI to be idle; just bail this frame
         return qfalse;
     }
 
-    // If the next step hits the enemy/goal, return immediately
     closeToEnemy = AI_CloseEnough(self, goal, dist);
     if (closeToEnemy) {
         //G_Printf("movetogoal too close to enemy: self=%i goal=%i\n",
@@ -758,7 +749,6 @@ qboolean AI_MoveToGoal(gentity_t* self, float dist) {
         return qfalse;
     }
 
-    // Try stepping along current ideal yaw. Occasionally (rand) or on failure, pick a new chase dir.
     if (((rand() & 3) == 1) || !AI_StepDirection(self, self->monsterinfo->ideal_yaw, dist)) {
         AI_NewChaseDir(self, goal, dist);
     }
@@ -799,11 +789,6 @@ void AI_ClearEntity(gentity_t* ent) {
     ent->enemy = NULL;
 }
 
-// ---------------------------------------------------------------------------
-// Basic movement / targeting stubs (to be expanded)
-// ---------------------------------------------------------------------------
-
-
 void AI_SetMoveTarget(gentity_t* self, gentity_t* target) {
     if (!self->monsterinfo) return;
     self->monsterinfo->goalentity = target;
@@ -832,8 +817,9 @@ void Monster_DropToFloor(gentity_t* ent) {
 
 
 void Monster_Die(gentity_t* self, gentity_t* inflictor, gentity_t* attacker, int damage, int mod) {
-    // play death animation, drop loot, etc.
     AssertEntityStateValid(self);
+
+    // todo: add q2 style "item" field for dropping generic items
 
     if (self->monsterinfo && self->monsterinfo->th_die)
         self->monsterinfo->th_die(self, inflictor, attacker, damage, mod);
@@ -857,8 +843,8 @@ void Monster_Pain(gentity_t* self, gentity_t* attacker, int damage)
 
 void Monster_BecomeNonsolid(gentity_t* self) {
     // following three lines are equivalent to the self.solid = SOLID_NOT in quakec code
-    self->r.contents = 0;        // not solid to anything
-    self->clipmask = 0;          // doesn’t collide when tracing against world
+    self->r.contents = 0;        
+    self->clipmask = 0;          
     trap_LinkEntity(self);
 }
 
@@ -928,7 +914,6 @@ void WalkMonsterStart(gentity_t* self) {
         self->think = self->monsterinfo->th_stand;
     }
 
-    // Spread think times
     self->nextthink = level.time + FRAMETIME + random() * 500;
     self->pain = Monster_Pain;
     self->die = Monster_Die;

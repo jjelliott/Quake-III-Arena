@@ -122,12 +122,11 @@ typedef enum {
     PROWL23,
     PROWL24,
 } frame_t;
-// 1) Generate forward declarations
+
 #define FRAME FRAME_DECL
 #include "grunt.frames"
 #undef FRAME
 
-// 2) Generate actual function definitions
 #define FRAME FRAME_DEF
 #include "grunt.frames"
 #undef FRAME
@@ -272,7 +271,6 @@ void SP_monster_grunt_q1(gentity_t* self) {
 
     self->s.frame = 0;
 
-    // Q3 entity setup
     self->health = 30;
     self->max_health = 30;
     self->takedamage = qtrue;
@@ -280,19 +278,14 @@ void SP_monster_grunt_q1(gentity_t* self) {
     self->die = Monster_Die;
     self->clipmask = MASK_MONSTERSOLID;
     self->r.svFlags |= SVF_MONSTER;
-    self->r.svFlags &= ~SVF_NOCLIENT; // make sure it’s not ignored by server
-    self->r.contents = CONTENTS_BODY;    // treated as a physical body
+    self->r.svFlags &= ~SVF_NOCLIENT; 
+    self->r.contents = CONTENTS_BODY;
 
-    // Model / bounding box
     self->s.modelindex = G_ModelIndex("models/monsters/grunt.md3");
     VectorSet(self->r.mins, -16, -16, -24);
     VectorSet(self->r.maxs, 16, 16, 40);
     VectorSet(self->monsterinfo->view_ofs, 0, 0, 24 );
     // self->s.pos.trBase[2] += 8; // raise 16 units for rendering
     trap_LinkEntity(self);
-    /*
-    self->think = WalkMonsterStart;
-    self->nextthink = level.time + 1;
-    */
     WalkMonsterStart(self);
 }
