@@ -1065,14 +1065,14 @@ static float CG_DrawScores( float y ) {
 
 	s1 = cgs.scores1;
 	s2 = cgs.scores2;
-
+	if (cgs.gametype == GT_SINGLE_PLAYER) {
+		return y;
+	}
 	y -=  BIGCHAR_HEIGHT + 8;
 
 	y1 = y;
 
-	if (cgs.gametype == GT_SINGLE_PLAYER) {
-		return 0;
-	}
+	
 
 	// draw from the right side to left
 	if ( cgs.gametype >= GT_TEAM ) {
