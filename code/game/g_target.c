@@ -518,7 +518,8 @@ void Secret_MarkFound(void) {
 }
 
 void target_secret_use(gentity_t* self, gentity_t* other, gentity_t* activator) {
-	// todo: play sound
+	G_Sound(self, CHAN_ITEM, G_SoundIndex("sound/misc/secret.wav"));
+	trap_SendServerCommand(other->client->ps.clientNum, va("cp \"%s\"", self->message ? self->message : "You found a secret!"));
 	Secret_MarkFound();
 	G_UseTargets(self, activator);
 	G_FreeEntity(self);
