@@ -1008,3 +1008,82 @@ void G_RunItem( gentity_t *ent ) {
 	G_BounceItem( ent, &tr );
 }
 
+void Touch_Sigil(gentity_t *ent, gentity_t *other, trace_t *trace) {
+	int currentSigils;
+
+	if ( !other->client ) return;
+
+	G_Sound(ent, CHAN_ITEM, G_SoundIndex("sound/items/runepickup.wav"));
+	trap_SendServerCommand(other->client->ps.clientNum, va("cp \"%s\"", "You got the rune!"));
+	currentSigils = trap_Cvar_VariableIntegerValue("sv_sigils");
+	currentSigils |= ent->sigil;
+	trap_Cvar_Set("sv_sigils", va("%d", currentSigils));
+
+	ent->touch = 0;
+	ent->think = G_FreeEntity;
+	ent->nextthink = level.time + FRAMETIME;
+}
+
+/*
+================
+FinishSpawningSigil
+
+Traces down to find where an item should rest, instead of letting them
+free fall from their spawn points
+================
+*/
+void FinishSpawningSigil( gentity_t *ent ) {
+	trace_t		tr;
+	vec3_t		dest;
+
+	VectorSet( ent->r.mins, -ITEM_RADIUS, -ITEM_RADIUS, -ITEM_RADIUS );
+	VectorSet( ent->r.maxs, ITEM_RADIUS, ITEM_RADIUS, ITEM_RADIUS );
+
+	ent->r.contents = CONTENTS_TRIGGER;
+	ent->touch = Touch_Sigil;
+
+	if ( ent->spawnflags & 1 ) {
+		// suspended
+		G_SetOrigin( ent, ent->s.origin );
+	} else {
+		// drop to floor
+		VectorSet( dest, ent->s.origin[0], ent->s.origin[1], ent->s.origin[2] - 4096 );
+		trap_Trace( &tr, ent->s.origin, ent->r.mins, ent->r.maxs, dest, ent->s.number, MASK_SOLID );
+		if ( tr.startsolid ) {
+			G_Printf ("FinishSpawningItem: %s startsolid at %s\n", ent->classname, vtos(ent->s.origin));
+			G_FreeEntity( ent );
+			return;
+		}
+
+		// allow to ride movers
+		ent->s.groundEntityNum = tr.entityNum;
+
+		G_SetOrigin( ent, tr.endpos );
+	}
+
+
+
+
+	trap_LinkEntity (ent);
+}
+
+void SP_item_sigil(gentity_t* self) {
+	int setSigils;
+	self->s.eType = ET_SIGIL;
+	if (self->sigil) {
+		setSigils = self->sigil;
+		self->sigil &= -self->sigil;
+		if (setSigils != self->sigil) {
+			G_Error("More than one sigil value set on item_sigil");
+		}
+	}
+	else {
+		G_Error("No sigil value set on item_sigil\n");
+	}
+	self->nextthink = level.time + FRAMETIME * 2;
+	self->think = FinishSpawningSigil;
+
+	self->physicsBounce = 0.50;
+	self->s.modelindex = G_ModelIndex("models/runes/rune1.md3");
+
+}

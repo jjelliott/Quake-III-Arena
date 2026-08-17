@@ -81,7 +81,9 @@ vmCvar_t	pmove_fixed;
 vmCvar_t	pmove_msec;
 vmCvar_t	g_rankings;
 vmCvar_t	g_listEntity;
+// sp cvars
 vmCvar_t	sv_levelTransition;
+vmCvar_t	sv_sigils;
 #ifdef MISSIONPACK
 vmCvar_t	g_obeliskHealth;
 vmCvar_t	g_obeliskRegenPeriod;
@@ -110,6 +112,7 @@ static cvarTable_t		gameCvarTable[] = {
 	// latched vars
 	{ &g_gametype, "g_gametype", "3", CVAR_SERVERINFO | CVAR_USERINFO | CVAR_LATCH, 0, qfalse  },
 	{ &sv_levelTransition, "sv_levelTransition", "0", CVAR_SERVERINFO | CVAR_LATCH, 0, qfalse  },
+	{&sv_sigils, "sv_sigils", "0", 0, 0, qfalse},
 	{ &g_maxclients, "sv_maxclients", "8", CVAR_SERVERINFO | CVAR_LATCH | CVAR_ARCHIVE, 0, qfalse  },
 	{ &g_maxGameClients, "g_maxGameClients", "0", CVAR_SERVERINFO | CVAR_LATCH | CVAR_ARCHIVE, 0, qfalse  },
 
@@ -429,8 +432,12 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 
 	if (sv_levelTransition.integer == 1) {
 		level.fromChangeLevel = qtrue;
-		trap_Cvar_Set("sv_levelTransition", "0");
 	}
+	else {
+		trap_Cvar_Set("sv_sigils", "0");
+	}
+
+	trap_Cvar_Set("sv_levelTransition", "0");
 
 	level.snd_fry = G_SoundIndex("sound/player/fry.wav");	// FIXME standing in lava / slime
 

@@ -226,6 +226,7 @@ struct gentity_s {
 	float show_hostile;   // time until monsters consider this hostile
 
 	char *map;
+	int sigil;
 };
 
 

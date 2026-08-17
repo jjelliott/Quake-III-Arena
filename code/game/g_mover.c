@@ -1457,6 +1457,31 @@ void SP_func_static( gentity_t *ent ) {
 	VectorCopy( ent->s.origin, ent->r.currentOrigin );
 }
 
+void SP_func_sigilgate(gentity_t* self) {
+
+	qboolean matches = (trap_Cvar_VariableIntegerValue("sv_sigils") & self->sigil) == self->sigil;
+
+	if ((matches && !(self->spawnflags & 1)) || (!matches && (self->spawnflags & 1)))  {
+		SP_func_static(self);
+	}
+	else {
+		G_FreeEntity(self);
+	}
+}
+
+void SP_func_episodegate(gentity_t* self) {
+	self->sigil = self->spawnflags & 0xF;
+	self->spawnflags &= ~0xF;
+	SP_func_sigilgate(self);
+}
+
+
+void SP_func_bossgate(gentity_t* self) {
+	self->sigil = 15;
+	self->spawnflags |= 1;
+	SP_func_sigilgate(self);
+}
+
 
 /*
 ===============================================================================

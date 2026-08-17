@@ -117,6 +117,7 @@ field_t fields[] = {
 	{"targetShaderName", FOFS(targetShaderName), F_LSTRING},
 	{"targetShaderNewName", FOFS(targetShaderNewName), F_LSTRING},
 	{"map", FOFS(map), F_LSTRING},
+	{"sigil", FOFS(sigil), F_INT},
 	{NULL}
 };
 
@@ -136,6 +137,9 @@ void SP_info_podium(gentity_t *ent);
 
 void SP_func_plat (gentity_t *ent);
 void SP_func_static (gentity_t *ent);
+void SP_func_episodegate(gentity_t* ent);
+void SP_func_bossgate(gentity_t* ent);
+void SP_func_sigilgate(gentity_t* ent);
 void SP_func_rotating (gentity_t *ent);
 void SP_func_bobbing (gentity_t *ent);
 void SP_func_pendulum( gentity_t *ent );
@@ -197,6 +201,7 @@ void SP_team_redobelisk( gentity_t *ent );
 void SP_team_neutralobelisk( gentity_t *ent );
 #endif
 void SP_item_botroam( gentity_t *ent ) {};
+void SP_item_sigil(gentity_t* self);
 
 spawn_t	spawns[] = {
 	// info entities don't do anything at all, but provide positional
@@ -212,6 +217,9 @@ spawn_t	spawns[] = {
 	{"func_button", SP_func_button},
 	{"func_door", SP_func_door},
 	{"func_static", SP_func_static},
+	{"func_episodegate", SP_func_episodegate},
+	{"func_bossgate", SP_func_bossgate},
+	{"func_sigilgate", SP_func_sigilgate},
 	{"func_rotating", SP_func_rotating},
 	{"func_bobbing", SP_func_bobbing},
 	{"func_pendulum", SP_func_pendulum},
@@ -273,6 +281,7 @@ spawn_t	spawns[] = {
 	{"team_neutralobelisk", SP_team_neutralobelisk},
 #endif
 	{"item_botroam", SP_item_botroam},
+	{"item_sigil", SP_item_sigil},
 
 	{0, 0}
 };

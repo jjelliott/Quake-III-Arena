@@ -196,6 +196,46 @@ static void CG_General( centity_t *cent ) {
 
 /*
 ==================
+CG_Sigil
+==================
+*/
+static void CG_Sigil(centity_t* cent) {
+	refEntity_t			ent;
+	entityState_t* s1;
+	float scale;
+
+	s1 = &cent->currentState;
+
+	// if set to invisible, skip
+	if (!s1->modelindex) {
+		return;
+	}
+
+	memset(&ent, 0, sizeof(ent));
+
+	// set frame
+	ent.frame = s1->frame;
+	ent.oldframe = ent.frame;
+	ent.backlerp = 0;
+
+	 scale = 0.005 + cent->currentState.number * 0.00001;
+	cent->lerpOrigin[2] += 4 + cos( (cg.time + 1000) * scale ) * 4;
+
+	VectorCopy(cent->lerpOrigin, ent.origin);
+	VectorCopy(cent->lerpOrigin, ent.oldorigin);
+
+	ent.hModel = cgs.gameModels[s1->modelindex];
+
+	VectorCopy(cg.autoAngles, cent->lerpAngles);
+	AxisCopy(cg.autoAxis, ent.axis);
+	
+
+	// add to refresh list
+	trap_R_AddRefEntityToScene(&ent);
+}
+
+/*
+==================
 CG_Monster
 ==================
 */
@@ -1027,6 +1067,9 @@ static void CG_AddCEntity( centity_t *cent ) {
 		break;
 	case ET_TEAM:
 		CG_TeamBase( cent );
+		break;
+	case ET_SIGIL:
+		CG_Sigil(cent);
 		break;
 	}
 }
