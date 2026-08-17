@@ -341,7 +341,32 @@ qboolean CG_DrawOldScoreboard( void ) {
 			CG_DrawBigString(x, y, s, fade);
 		}
 		else {
+			s = va("%s",
+				CG_ConfigString(CS_MESSAGE));
+			w = CG_DrawStrlen(s) * SMALLCHAR_WIDTH;
+			x = (SCREEN_WIDTH - w) / 2;
+			y = (SCREEN_HEIGHT ) - (SCREEN_HEIGHT / 10);
+			CG_DrawSmallString(x, y, s, fade);
+			s = va("Kills %i / %i",
+				atoi(CG_ConfigString(CS_MONSTERS_KILLED)), atoi(CG_ConfigString(CS_MONSTERS_TOTAL)));
+			w = CG_DrawStrlen(s) * SMALLCHAR_WIDTH;
+			x = (SCREEN_WIDTH - w) / 4;
+			y = (SCREEN_HEIGHT ) - (SCREEN_HEIGHT / 20);
+			CG_DrawSmallString(x, y, s, fade);
 
+			s = va("Skill %i",
+				atoi(Info_ValueForKey( CG_ConfigString( CS_SERVERINFO ), "g_spSkill" )));
+			w = CG_DrawStrlen(s) * SMALLCHAR_WIDTH;
+			x = ((SCREEN_WIDTH - w) / 2);
+			y = (SCREEN_HEIGHT ) - (SCREEN_HEIGHT / 20);
+			CG_DrawSmallString(x, y, s, fade);
+
+			s = va("Secrets %i / %i",
+				atoi(CG_ConfigString(CS_SECRETS_FOUND)), atoi(CG_ConfigString(CS_SECRETS_TOTAL)));
+			w = CG_DrawStrlen(s) * SMALLCHAR_WIDTH;
+			x = ((SCREEN_WIDTH - w) / 4)*3;
+			y = (SCREEN_HEIGHT ) - (SCREEN_HEIGHT / 20);
+			CG_DrawSmallString(x, y, s, fade);
 		}
 		return qtrue;
 	}
