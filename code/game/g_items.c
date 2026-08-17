@@ -348,6 +348,7 @@ RespawnItem
 ===============
 */
 void RespawnItem( gentity_t *ent ) {
+	if (g_gametype.integer == GT_SINGLE_PLAYER || g_gametype.integer == GT_COOP) return;
 	// randomly select from teamed entities
 	if (ent->team) {
 		gentity_t	*master;

@@ -51,7 +51,9 @@ void SP_info_player_deathmatch( gentity_t *ent ) {
 equivelant to info_player_deathmatch
 */
 void SP_info_player_start(gentity_t *ent) {
-	ent->classname = "info_player_deathmatch";
+	//if (g_gametype.integer != GT_SINGLE_PLAYER) {
+	//	ent->classname = "info_player_deathmatch";
+	//}
 	SP_info_player_deathmatch( ent );
 }
 
@@ -179,11 +181,28 @@ gentity_t *SelectRandomFurthestSpawnPoint ( vec3_t avoidPoint, vec3_t origin, ve
 	float		list_dist[64];
 	gentity_t	*list_spot[64];
 	int			numSpots, rnd, i, j;
+	char* entname;
 
+	if (g_gametype.integer == GT_SINGLE_PLAYER) {
+		spot = NULL;
+		spot = G_Find(spot, FOFS(classname), "info_player_start");
+		if (spot == NULL) G_Error("No info_player_start on map");
+		VectorCopy(spot->s.origin, origin);
+		origin[2] += 9;
+		VectorCopy(spot->s.angles, angles);
+		return spot;
+	}
+	else if (g_gametype.integer == GT_COOP) {
+
+		entname = "info_player_coop";
+	}
+	else {
+		entname = "info_player_deathmatch";
+	}
 	numSpots = 0;
 	spot = NULL;
 
-	while ((spot = G_Find (spot, FOFS(classname), "info_player_deathmatch")) != NULL) {
+	while ((spot = G_Find (spot, FOFS(classname), entname)) != NULL) {
 		if ( SpotWouldTelefrag( spot ) ) {
 			continue;
 		}
@@ -212,7 +231,7 @@ gentity_t *SelectRandomFurthestSpawnPoint ( vec3_t avoidPoint, vec3_t origin, ve
 		}
 	}
 	if (!numSpots) {
-		spot = G_Find( NULL, FOFS(classname), "info_player_deathmatch");
+		spot = G_Find( NULL, FOFS(classname), entname);
 		if (!spot)
 			G_Error( "Couldn't find a spawn point" );
 		VectorCopy (spot->s.origin, origin);
