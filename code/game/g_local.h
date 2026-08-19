@@ -564,6 +564,10 @@ void G_SetOrigin( gentity_t *ent, vec3_t origin );
 void AddRemap(const char *oldShader, const char *newShader, float timeOffset);
 const char *BuildShaderStateConfig();
 
+qboolean G_IsSinglePlayer();
+qboolean G_IsCoop();
+qboolean G_IsMonsterMode();
+
 //
 // g_combat.c
 //

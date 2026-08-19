@@ -664,3 +664,13 @@ int DebugLine(vec3_t start, vec3_t end, int color) {
 
 	return trap_DebugPolygonCreate(color, 4, points);
 }
+
+qboolean G_IsSinglePlayer() {
+	return g_gametype.integer == GT_SINGLE_PLAYER;
+}
+qboolean G_IsCoop() {
+	return g_gametype.integer == GT_COOP;
+}
+qboolean G_IsMonsterMode() {
+	return G_IsSinglePlayer() || G_IsCoop();
+}
