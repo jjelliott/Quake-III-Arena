@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // perform the server side effects of a weapon firing
 
 #include "g_local.h"
+#include "ai_monster.h"
 
 static	float	s_quadFactor;
 static	vec3_t	forward, right, up;
@@ -891,7 +892,57 @@ void FireWeapon( gentity_t *ent ) {
 		break;
 	}
 }
+/*
+===============
+FireMonsterWeapon
+===============
+*/
+void FireMonsterWeapon( gentity_t *ent ) {
+	// if (ent->client->ps.powerups[PW_QUAD] ) {
+		// s_quadFactor = g_quadfactor.value;
+	// } else {
+		s_quadFactor = 1;
+	// }
 
+	// set aiming directions
+	AngleVectors (ent->client->ps.viewangles, forward, right, up);
+
+	CalcMuzzlePointOrigin ( ent, ent->client->oldOrigin, forward, right, up, muzzle );
+
+	// fire the specific weapon
+	switch( ent->s.weapon ) {
+	case WP_GAUNTLET:
+		Weapon_Gauntlet( ent );
+		break;
+	case WP_LIGHTNING:
+		Weapon_LightningFire( ent );
+		break;
+	case WP_SHOTGUN:
+		weapon_supershotgun_fire( ent );
+		break;
+	case WP_MACHINEGUN:
+		Bullet_Fire( ent, MACHINEGUN_SPREAD, MACHINEGUN_DAMAGE );
+		break;
+	case WP_GRENADE_LAUNCHER:
+		weapon_grenadelauncher_fire( ent );
+		break;
+	case WP_ROCKET_LAUNCHER:
+		Weapon_RocketLauncher_Fire( ent );
+		break;
+	case WP_PLASMAGUN:
+		Weapon_Plasmagun_Fire( ent );
+		break;
+	case WP_RAILGUN:
+		weapon_railgun_fire( ent );
+		break;
+	case WP_BFG:
+		BFG_Fire( ent );
+		break;
+	default:
+// FIXME		G_Error( "Bad ent->s.weapon" );
+		break;
+	}
+}
 
 #ifdef MISSIONPACK
 

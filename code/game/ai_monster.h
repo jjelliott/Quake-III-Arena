@@ -88,4 +88,6 @@ void Monster_BecomeNonsolid(gentity_t* self);
 
 void Monster_IncreaseCount(void);
 void Monster_MarkKilled(void);
+
+void FireMonsterWeapon( gentity_t *ent );
 #endif // AI_MONSTER_H
