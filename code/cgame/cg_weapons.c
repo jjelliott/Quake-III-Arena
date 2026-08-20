@@ -2047,7 +2047,7 @@ Perform the same traces the server did to locate the
 hit splashes
 ================
 */
-static void CG_ShotgunPattern( vec3_t origin, vec3_t origin2, int seed, int otherEntNum ) {
+static void CG_ShotgunPattern( vec3_t origin, vec3_t origin2, int seed, int otherEntNum, int pellets ) {
 	int			i;
 	float		r, u;
 	vec3_t		end;
@@ -2060,7 +2060,7 @@ static void CG_ShotgunPattern( vec3_t origin, vec3_t origin2, int seed, int othe
 	CrossProduct( forward, right, up );
 
 	// generate the "random" spread pattern
-	for ( i = 0 ; i < DEFAULT_SHOTGUN_COUNT ; i++ ) {
+	for ( i = 0 ; i < pellets ; i++ ) {
 		r = Q_crandom( &seed ) * DEFAULT_SHOTGUN_SPREAD * 16;
 		u = Q_crandom( &seed ) * DEFAULT_SHOTGUN_SPREAD * 16;
 		VectorMA( origin, 8192 * 16, forward, end);
@@ -2094,7 +2094,7 @@ void CG_ShotgunFire( entityState_t *es ) {
 			CG_SmokePuff( v, up, 32, 1, 1, 1, 0.33f, 900, cg.time, 0, LEF_PUFF_DONT_SCALE, cgs.media.shotgunSmokePuffShader );
 		}
 	}
-	CG_ShotgunPattern( es->pos.trBase, es->origin2, es->eventParm, es->otherEntityNum );
+	CG_ShotgunPattern( es->pos.trBase, es->origin2, es->eventParm, es->otherEntityNum, es->generic1 );
 }
 
 /*

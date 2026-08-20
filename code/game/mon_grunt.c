@@ -123,6 +123,11 @@ typedef enum {
     PROWL24,
 } frame_t;
 
+void grunt_fire(gentity_t* self) {
+
+    weapon_monstershotgun_fire(self);
+}
+
 #define FRAME FRAME_DECL
 #include "grunt.frames"
 #undef FRAME
@@ -143,20 +148,20 @@ static void grunt_pain(gentity_t* self, gentity_t* attacker, int damage)
     {
         self->monsterinfo->pain_finished = level.time + 600;
         grunt_pain1(self);
-        G_Sound(self, CHAN_VOICE, G_SoundIndex("sounds/monsters/grunt/pain1.wav"));
+        G_Sound(self, CHAN_VOICE, G_SoundIndex("sound/monsters/grunt/pain1.wav"));
     }
     else if (r < 0.6)
     {
         self->monsterinfo->pain_finished = level.time + 1100;
         grunt_painb1(self);
-        G_Sound(self, CHAN_VOICE, G_SoundIndex("sounds/monsters/grunt/pain2.wav"));
+        G_Sound(self, CHAN_VOICE, G_SoundIndex("sound/monsters/grunt/pain2.wav"));
     }
     else
     {
         self->monsterinfo->pain_finished = level.time + 1100;
         grunt_painc1(self);
 
-        G_Sound(self, CHAN_VOICE, G_SoundIndex("sounds/monsters/grunt/pain2.wav"));
+        G_Sound(self, CHAN_VOICE, G_SoundIndex("sound/monsters/grunt/pain2.wav"));
     }
 }
 
@@ -175,7 +180,7 @@ static void grunt_die(gentity_t* self, gentity_t* inflictor, gentity_t* attacker
 
 static void grunt_sight(gentity_t* self, gentity_t* other) {
     // Play the sight sound, alert animation, etc.
-    G_Sound(self, CHAN_VOICE, G_SoundIndex("sounds/monsters/grunt/sight1.wav"));
+    G_Sound(self, CHAN_VOICE, G_SoundIndex("sound/monsters/grunt/sight1.wav"));
 }
 
 static qboolean grunt_check(gentity_t* self, range_t enemy_range)
@@ -270,6 +275,8 @@ void SP_monster_grunt_q1(gentity_t* self) {
     self->monsterinfo->th_check = grunt_check;
 
     self->s.frame = 0;
+
+    self->s.weapon = WP_SHOTGUN;
 
     self->health = 30;
     self->max_health = 30;

@@ -263,13 +263,10 @@ SHOTGUN
 // client predicts same spreads
 #define	DEFAULT_SHOTGUN_DAMAGE	10
 
-qboolean ShotgunPellet( vec3_t start, vec3_t end, gentity_t *ent ) {
+qboolean ShotgunPellet( vec3_t start, vec3_t end, gentity_t *ent, int dpp, vec3_t knockdir ) {
 	trace_t		tr;
 	int			damage, i, passent;
 	gentity_t	*traceEnt;
-#ifdef MISSIONPACK
-	vec3_t		impactpoint, bouncedir;
-#endif
 	vec3_t		tr_start, tr_end;
 
 	passent = ent->s.number;
@@ -285,34 +282,11 @@ qboolean ShotgunPellet( vec3_t start, vec3_t end, gentity_t *ent ) {
 		}
 
 		if ( traceEnt->takedamage) {
-			damage = DEFAULT_SHOTGUN_DAMAGE * s_quadFactor;
-#ifdef MISSIONPACK
-			if ( traceEnt->client && traceEnt->client->invulnerabilityTime > level.time ) {
-				if (G_InvulnerabilityEffect( traceEnt, forward, tr.endpos, impactpoint, bouncedir )) {
-					G_BounceProjectile( tr_start, impactpoint, bouncedir, tr_end );
-					VectorCopy( impactpoint, tr_start );
-					// the player can hit him/herself with the bounced rail
-					passent = ENTITYNUM_NONE;
-				}
-				else {
-					VectorCopy( tr.endpos, tr_start );
-					passent = traceEnt->s.number;
-				}
-				continue;
-			}
-			else {
-				G_Damage( traceEnt, ent, ent, forward, tr.endpos,
-					damage, 0, MOD_SHOTGUN);
+			damage = dpp;
+			G_Damage( traceEnt, ent, ent, knockdir, tr.endpos,	damage, 0, MOD_SHOTGUN);
 				if( LogAccuracyHit( traceEnt, ent ) ) {
 					return qtrue;
 				}
-			}
-#else
-			G_Damage( traceEnt, ent, ent, forward, tr.endpos,	damage, 0, MOD_SHOTGUN);
-				if( LogAccuracyHit( traceEnt, ent ) ) {
-					return qtrue;
-				}
-#endif
 		}
 		return qfalse;
 	}
@@ -320,7 +294,7 @@ qboolean ShotgunPellet( vec3_t start, vec3_t end, gentity_t *ent ) {
 }
 
 // this should match CG_ShotgunPattern
-void ShotgunPattern( vec3_t origin, vec3_t origin2, int seed, gentity_t *ent ) {
+void ShotgunPattern( vec3_t origin, vec3_t origin2, int seed, gentity_t *ent, int pellets, int dpp ) {
 	int			i;
 	float		r, u;
 	vec3_t		end;
@@ -334,16 +308,16 @@ void ShotgunPattern( vec3_t origin, vec3_t origin2, int seed, gentity_t *ent ) {
 	PerpendicularVector( right, forward );
 	CrossProduct( forward, right, up );
 
-	oldScore = ent->client->ps.persistant[PERS_SCORE];
+	//oldScore = ent->client->ps.persistant[PERS_SCORE];
 
 	// generate the "random" spread pattern
-	for ( i = 0 ; i < DEFAULT_SHOTGUN_COUNT ; i++ ) {
+	for ( i = 0 ; i < pellets ; i++ ) {
 		r = Q_crandom( &seed ) * DEFAULT_SHOTGUN_SPREAD * 16;
 		u = Q_crandom( &seed ) * DEFAULT_SHOTGUN_SPREAD * 16;
 		VectorMA( origin, 8192 * 16, forward, end);
 		VectorMA (end, r, right, end);
 		VectorMA (end, u, up, end);
-		if( ShotgunPellet( origin, end, ent ) && !hitClient ) {
+		if( ShotgunPellet( origin, end, ent, dpp, forward ) && !hitClient ) {
 			hitClient = qtrue;
 			ent->client->accuracy_hits++;
 		}
@@ -359,9 +333,33 @@ void weapon_supershotgun_fire (gentity_t *ent) {
 	VectorScale( forward, 4096, tent->s.origin2 );
 	SnapVector( tent->s.origin2 );
 	tent->s.eventParm = rand() & 255;		// seed for spread pattern
+	tent->s.generic1 = DEFAULT_SHOTGUN_COUNT;
 	tent->s.otherEntityNum = ent->s.number;
 
-	ShotgunPattern( tent->s.pos.trBase, tent->s.origin2, tent->s.eventParm, ent );
+	ShotgunPattern( tent->s.pos.trBase, tent->s.origin2, tent->s.eventParm, ent, DEFAULT_SHOTGUN_COUNT, DEFAULT_SHOTGUN_DAMAGE * s_quadFactor );
+}
+
+void weapon_monstershotgun_fire (gentity_t *ent) {
+	gentity_t		*tent;
+	vec3_t blastOrigin, target, dir;
+	VectorAdd(ent->r.currentOrigin, ent->monsterinfo->view_ofs, blastOrigin);
+
+	VectorCopy(ent->enemy->r.currentOrigin, target);
+	if ( ent->enemy->client ) {
+		VectorMA( target, -0.2f, ent->enemy->client->ps.velocity, target );  // give dodging player a chance
+	}
+	VectorSubtract(target, blastOrigin, dir);
+	VectorNormalize(dir);
+
+	// send shotgun blast
+	tent = G_TempEntity( blastOrigin, EV_SHOTGUN );
+	VectorScale( dir, 4096, tent->s.origin2 );
+	SnapVector( tent->s.origin2 );
+	tent->s.eventParm = rand() & 255;		// seed for spread pattern
+	tent->s.generic1 = 4;
+	tent->s.otherEntityNum = ent->s.number;
+
+	ShotgunPattern( tent->s.pos.trBase, tent->s.origin2, tent->s.eventParm, ent, 4, 4 );
 }
 
 
@@ -892,12 +890,13 @@ void FireWeapon( gentity_t *ent ) {
 		break;
 	}
 }
+
 /*
 ===============
 FireMonsterWeapon
 ===============
 */
-void FireMonsterWeapon( gentity_t *ent ) {
+void FireMonsterWeapon( gentity_t *ent, vec3_t *dir ) {
 	// if (ent->client->ps.powerups[PW_QUAD] ) {
 		// s_quadFactor = g_quadfactor.value;
 	// } else {
@@ -905,9 +904,9 @@ void FireMonsterWeapon( gentity_t *ent ) {
 	// }
 
 	// set aiming directions
-	AngleVectors (ent->client->ps.viewangles, forward, right, up);
+	AngleVectors (ent->s.angles, forward, right, up);
 
-	CalcMuzzlePointOrigin ( ent, ent->client->oldOrigin, forward, right, up, muzzle );
+	//CalcMuzzlePointOrigin ( ent, ent->s.angles, forward, right, up, muzzle );
 
 	// fire the specific weapon
 	switch( ent->s.weapon ) {
@@ -918,7 +917,7 @@ void FireMonsterWeapon( gentity_t *ent ) {
 		Weapon_LightningFire( ent );
 		break;
 	case WP_SHOTGUN:
-		weapon_supershotgun_fire( ent );
+		weapon_monstershotgun_fire( ent );
 		break;
 	case WP_MACHINEGUN:
 		Bullet_Fire( ent, MACHINEGUN_SPREAD, MACHINEGUN_DAMAGE );
