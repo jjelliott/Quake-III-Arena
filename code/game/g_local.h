@@ -203,6 +203,7 @@ struct gentity_s {
 
 	gentity_t	*chain;
 	gentity_t	*enemy;
+	gentity_t	*oldenemy;
 	gentity_t	*activator;
 	gentity_t	*teamchain;		// next entity in team
 	gentity_t	*teammaster;	// master of the team

@@ -174,6 +174,16 @@ qboolean AI_FindTarget(gentity_t* self)
     gentity_t* client;
     float r;
 
+    if (self->oldenemy) {
+        if (!self->enemy || self->enemy->health <= 0) {
+            self->enemy = self->oldenemy;
+            self->oldenemy = NULL;
+            AI_FoundTarget(self);
+            return qtrue;
+        }
+    }
+
+
     //G_Printf("Searching for enemy\n");
     // quick sight wakeup (sight_entity from other monsters)
     if (level.sight_entity_time >= level.time - 100 && !(self->spawnflags & 3)) {
@@ -440,6 +450,7 @@ void AI_Run(gentity_t* self, float dist) {
     if (!enemy || !enemy->inuse || enemy->health <= 0) {
         // handle oldenemy fallback, or go idle
         self->enemy = NULL;
+        self->think = self->monsterinfo->th_stand;
         return;
     }
 

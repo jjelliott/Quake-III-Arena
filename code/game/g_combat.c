@@ -1064,6 +1064,18 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 		}
 	}
 
+	if (targ->s.eType == ET_MONSTER && attacker != NULL) {
+		if (targ != attacker && attacker != targ->enemy) {
+			if ((targ->classname != attacker->classname) || (!strcmp(targ->classname, "monster_grunt_q1"))) {
+				if (targ->enemy && !strcmp(targ->enemy->classname, "player"))
+					targ->oldenemy = targ->enemy;
+
+				targ->enemy = attacker;
+				AI_FoundTarget(targ);
+			}
+		}
+	}
+
 }
 
 
