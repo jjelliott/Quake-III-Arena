@@ -124,7 +124,7 @@ typedef enum {
 } frame_t;
 
 void grunt_fire(gentity_t* self) {
-
+    G_Sound(self, CHAN_WEAPON, G_SoundIndex("sound/monsters/grunt/sattck1.wav"));
     weapon_monstershotgun_fire(self);
 }
 
