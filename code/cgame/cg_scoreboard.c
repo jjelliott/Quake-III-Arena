@@ -303,17 +303,16 @@ qboolean CG_DrawOldScoreboard( void ) {
 		}
 		fade = *fadeColor;
 	}
-	if (cgs.gametype == GT_SINGLE_PLAYER)
+	if (cgs.gametype == GT_SINGLE_PLAYER || cgs.gametype == GT_COOP)
 	{
 		if (cg.predictedPlayerState.pm_type == PM_INTERMISSION) {
-			s = va("Completed",
-				atoi(CG_ConfigString(CS_MONSTERS_KILLED)), atoi(CG_ConfigString(CS_MONSTERS_TOTAL)));
+			s = "Completed";
 			w = CG_DrawStrlen(s) * BIGCHAR_WIDTH;
 			x = (SCREEN_WIDTH - w) / 2;
 			y = SCREEN_HEIGHT / 4;
 			CG_DrawBigString(x, y, s, fade);
-			s = va("%s",
-				CG_ConfigString(CS_MESSAGE));
+			s = va("%s (%s)",
+				CG_ConfigString(CS_MESSAGE), Info_ValueForKey( CG_ConfigString( CS_SERVERINFO ), "mapname" ));
 			w = CG_DrawStrlen(s) * SMALLCHAR_WIDTH;
 			x = (SCREEN_WIDTH - w) / 2;
 			y = (SCREEN_HEIGHT / 4) + 20;
@@ -341,8 +340,8 @@ qboolean CG_DrawOldScoreboard( void ) {
 			CG_DrawBigString(x, y, s, fade);
 		}
 		else {
-			s = va("%s",
-				CG_ConfigString(CS_MESSAGE));
+			s = va("%s (%s)",
+				CG_ConfigString(CS_MESSAGE), Info_ValueForKey( CG_ConfigString( CS_SERVERINFO ), "mapname" ));
 			w = CG_DrawStrlen(s) * SMALLCHAR_WIDTH;
 			x = (SCREEN_WIDTH - w) / 2;
 			y = (SCREEN_HEIGHT ) - (SCREEN_HEIGHT / 10);
