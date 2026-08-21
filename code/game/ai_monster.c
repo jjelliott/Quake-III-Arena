@@ -832,6 +832,10 @@ void Monster_Die(gentity_t* self, gentity_t* inflictor, gentity_t* attacker, int
 
     // todo: add q2 style "item" field for dropping generic items
 
+    if (G_IsCoop() && attacker && attacker->client) {
+       AddScore(attacker, self->r.currentOrigin, 1);
+    }
+
     if (self->monsterinfo && self->monsterinfo->th_die)
         self->monsterinfo->th_die(self, inflictor, attacker, damage, mod);
 
