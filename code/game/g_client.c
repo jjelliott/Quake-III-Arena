@@ -185,7 +185,10 @@ gentity_t *SelectRandomFurthestSpawnPoint ( vec3_t avoidPoint, vec3_t origin, ve
 
 	if (g_gametype.integer == GT_SINGLE_PLAYER) {
 		spot = NULL;
-		spot = G_Find(spot, FOFS(classname), "info_player_start");
+		if (trap_Cvar_VariableIntegerValue("sv_sigils"))
+			spot = G_Find(spot, FOFS(classname), "info_player_start2");
+		if (spot == NULL)
+			spot = G_Find(spot, FOFS(classname), "info_player_start");
 		if (spot == NULL) G_Error("No info_player_start on map");
 		VectorCopy(spot->s.origin, origin);
 		origin[2] += 9;
@@ -232,8 +235,18 @@ gentity_t *SelectRandomFurthestSpawnPoint ( vec3_t avoidPoint, vec3_t origin, ve
 	}
 	if (!numSpots) {
 		spot = G_Find( NULL, FOFS(classname), entname);
-		if (!spot)
+		if (!spot) {
+			if (G_IsCoop()) {
+				spot = NULL;
+				spot = G_Find(spot, FOFS(classname), "info_player_start");
+				if (spot == NULL) G_Error("No info_player_start on map");
+				VectorCopy(spot->s.origin, origin);
+				origin[2] += 9;
+				VectorCopy(spot->s.angles, angles);
+				return spot;
+			}
 			G_Error( "Couldn't find a spawn point" );
+		}
 		VectorCopy (spot->s.origin, origin);
 		origin[2] += 9;
 		VectorCopy (spot->s.angles, angles);
@@ -301,9 +314,11 @@ gentity_t *SelectInitialSpawnPoint( vec3_t origin, vec3_t angles ) {
 	gentity_t	*spot;
 
 	spot = NULL;
-	while ((spot = G_Find (spot, FOFS(classname), "info_player_deathmatch")) != NULL) {
-		if ( spot->spawnflags & 1 ) {
-			break;
+	if (!G_IsMonsterMode()) {
+		while ((spot = G_Find (spot, FOFS(classname), "info_player_deathmatch")) != NULL) {
+			if ( spot->spawnflags & 1 ) {
+				break;
+			}
 		}
 	}
 
@@ -1033,6 +1048,7 @@ void ClientBegin( int clientNum ) {
 	gclient_t	*client;
 	gentity_t	*tent;
 	int			flags;
+	qboolean validSpawns;
 
 	ent = g_entities + clientNum;
 
@@ -1059,6 +1075,16 @@ void ClientBegin( int clientNum ) {
 	memset( &client->ps, 0, sizeof( client->ps ) );
 	client->ps.eFlags = flags;
 
+	if (G_IsMonsterMode()) {
+		validSpawns = (G_IsCoop() ? G_Find(NULL, FOFS(classname), "info_player_coop") != NULL : qfalse) || G_Find(NULL, FOFS(classname), "info_player_start") != NULL;
+	} else {
+		validSpawns = G_Find(NULL, FOFS(classname), "info_player_deathmatch") != NULL;
+	}
+
+	if (!validSpawns) {
+		trap_DropClient(clientNum, "No valid spawns for gametype present");
+		return;
+	}
 	// locate ent at a spawn point
 	ClientSpawn( ent );
 

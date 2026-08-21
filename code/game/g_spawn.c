@@ -208,6 +208,8 @@ spawn_t	spawns[] = {
 	// information for things controlled by other processes
 	{"info_player_start", SP_info_player_start},
 	{"info_player_start2", SP_info_player_start},
+	{"info_player_coop", SP_info_player_start},
+	{"info_player_coop2", SP_info_player_start},
 	{"info_player_deathmatch", SP_info_player_deathmatch},
 	{"info_player_intermission", SP_info_player_intermission},
 	{"info_null", SP_info_null},
