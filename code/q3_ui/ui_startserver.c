@@ -139,7 +139,15 @@ static int GametypeBits( char *string ) {
 		}
 
 		if( Q_stricmp( token, "single" ) == 0 ) {
+			bits |= 1 << GT_BOTLADDER;
+			continue;
+		}
+		if( Q_stricmp( token, "q3sp" ) == 0 ) {
 			bits |= 1 << GT_SINGLE_PLAYER;
+			continue;
+		}
+		if( Q_stricmp( token, "q3coop" ) == 0 ) {
+			bits |= 1 << GT_COOP;
 			continue;
 		}
 
@@ -258,7 +266,7 @@ static void StartServer_GametypeEvent( void* ptr, int event ) {
 	s_startserver.nummaps = 0;
 	matchbits = 1 << gametype_remap[s_startserver.gametype.curvalue];
 	if( gametype_remap[s_startserver.gametype.curvalue] == GT_FFA ) {
-		matchbits |= ( 1 << GT_SINGLE_PLAYER );
+		matchbits |= ( 1 << GT_BOTLADDER );
 	}
 	for( i = 0; i < count; i++ ) {
 		info = UI_GetArenaInfoByNumber( i );
