@@ -1213,11 +1213,19 @@ void ClientSpawn(gentity_t *ent) {
 
 	client->airOutTime = level.time + 12000;
 
-	trap_GetUserinfo( index, userinfo, sizeof(userinfo) );
-	// set max health
-	client->pers.maxHealth = atoi( Info_ValueForKey( userinfo, "handicap" ) );
-	if ( client->pers.maxHealth < 1 || client->pers.maxHealth > 100 ) {
-		client->pers.maxHealth = 100;
+	if (G_IsMonsterMode()) {
+		if (trap_Cvar_VariableIntegerValue("g_spSkill") == 1) {
+			client->pers.maxHealth = 150;
+		} else if (trap_Cvar_VariableIntegerValue("g_spSkill") == 5) {
+			client->pers.maxHealth = 50;
+		}
+	} else {
+		trap_GetUserinfo( index, userinfo, sizeof(userinfo) );
+		// set max health
+		client->pers.maxHealth = atoi( Info_ValueForKey( userinfo, "handicap" ) );
+		if ( client->pers.maxHealth < 1 || client->pers.maxHealth > 100 ) {
+			client->pers.maxHealth = 100;
+		}
 	}
 	// clear entity values
 	client->ps.stats[STAT_MAX_HEALTH] = client->pers.maxHealth;

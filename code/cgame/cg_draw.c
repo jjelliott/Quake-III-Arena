@@ -632,7 +632,7 @@ static void CG_DrawStatusBar( void ) {
 	// health
 	//
 	value = ps->stats[STAT_HEALTH];
-	if ( value > 100 ) {
+	if ( value > ps->stats[STAT_MAX_HEALTH] ) {
 		trap_R_SetColor( colors[3] );		// white
 	} else if (value > 25) {
 		trap_R_SetColor( colors[0] );	// green
