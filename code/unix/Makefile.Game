@@ -32,10 +32,13 @@ Q3ASM=$(BINDIR)/q3asm
 GDIR=$(SRCDIR)/game
 CGDIR=$(SRCDIR)/cgame
 UIDIR=$(SRCDIR)/ui
+Q3UIDIR=$(SRCDIR)/q3_ui
 
 LCCFLAGS=-DQ3_VM -S -Wf-target=bytecode -Wf-g -I$(CGDIR) -I$(GDIR) -I$(UIDIR)
+UILCCFLAGS=-DQ3_VM -S -Wf-target=bytecode -Wf-g -I$(CGDIR) -I$(GDIR) -I$(Q3UIDIR)
 
 DO_LCC=$(LCC) $(LCCFLAGS) -o $@ -c $<
+DO_UI_LCC=$(LCC) $(UILCCFLAGS) -o $@ -c $<
 
 TARGETS=\
 	$(BDIR)/$(GAMEDIR)/vm/cgame.qvm \
@@ -48,6 +51,7 @@ makedir:
 	@-mkdir $(GDIR)/vm
 	@-mkdir $(CGDIR)/vm
 	@-mkdir $(UIDIR)/vm
+	@-mkdir $(Q3UIDIR)/vm
 
 #############################################################################
 # GAME VM
@@ -188,8 +192,101 @@ $(CGDIR)/vm/bg_misc.asm : $(GDIR)/bg_misc.c; $(DO_LCC)
 $(CGDIR)/vm/q_math.asm : $(GDIR)/q_math.c; $(DO_LCC)
 $(CGDIR)/vm/q_shared.asm : $(GDIR)/q_shared.c; $(DO_LCC)
 
-$(BDIR)/$(GAMEDIR)/vm/ui.qvm :
-	echo ui.qvm disabled
+#############################################################################
+# UI VM  (base q3_ui)
+#############################################################################
+
+##NOTE:  ui_main must be first.  Control passes to first function in the vm
+
+UIVMASM = \
+	$(Q3UIDIR)/vm/ui_main.asm \
+	$(Q3UIDIR)/vm/ui_gameinfo.asm \
+	$(Q3UIDIR)/vm/ui_atoms.asm \
+	$(Q3UIDIR)/vm/ui_botladder.asm \
+	$(Q3UIDIR)/vm/ui_cinematics.asm \
+	$(Q3UIDIR)/vm/ui_connect.asm \
+	$(Q3UIDIR)/vm/ui_controls2.asm \
+	$(Q3UIDIR)/vm/ui_demo2.asm \
+	$(Q3UIDIR)/vm/ui_mfield.asm \
+	$(Q3UIDIR)/vm/ui_credits.asm \
+	$(Q3UIDIR)/vm/ui_menu.asm \
+	$(Q3UIDIR)/vm/ui_ingame.asm \
+	$(Q3UIDIR)/vm/ui_confirm.asm \
+	$(Q3UIDIR)/vm/ui_setup.asm \
+	$(Q3UIDIR)/vm/ui_options.asm \
+	$(Q3UIDIR)/vm/ui_display.asm \
+	$(Q3UIDIR)/vm/ui_sound.asm \
+	$(Q3UIDIR)/vm/ui_network.asm \
+	$(Q3UIDIR)/vm/ui_playermodel.asm \
+	$(Q3UIDIR)/vm/ui_players.asm \
+	$(Q3UIDIR)/vm/ui_playersettings.asm \
+	$(Q3UIDIR)/vm/ui_preferences.asm \
+	$(Q3UIDIR)/vm/ui_qmenu.asm \
+	$(Q3UIDIR)/vm/ui_serverinfo.asm \
+	$(Q3UIDIR)/vm/ui_servers2.asm \
+	$(Q3UIDIR)/vm/ui_sparena.asm \
+	$(Q3UIDIR)/vm/ui_specifyserver.asm \
+	$(Q3UIDIR)/vm/ui_sppostgame.asm \
+	$(Q3UIDIR)/vm/ui_splevel.asm \
+	$(Q3UIDIR)/vm/ui_spskill.asm \
+	$(Q3UIDIR)/vm/ui_startserver.asm \
+	$(Q3UIDIR)/vm/ui_team.asm \
+	$(Q3UIDIR)/vm/ui_video.asm \
+	$(Q3UIDIR)/vm/ui_addbots.asm \
+	$(Q3UIDIR)/vm/ui_removebots.asm \
+	$(Q3UIDIR)/vm/ui_teamorders.asm \
+	$(Q3UIDIR)/vm/ui_cdkey.asm \
+	$(Q3UIDIR)/vm/ui_mods.asm \
+	$(Q3UIDIR)/vm/bg_misc.asm \
+	$(Q3UIDIR)/vm/bg_lib.asm \
+	$(Q3UIDIR)/vm/q_math.asm \
+	$(Q3UIDIR)/vm/q_shared.asm
+
+$(BDIR)/$(GAMEDIR)/vm/ui.qvm : $(UIVMASM)
+	$(Q3ASM) -o $@ $(UIVMASM) $(UIDIR)/ui_syscalls.asm
+
+$(Q3UIDIR)/vm/ui_main.asm : $(Q3UIDIR)/ui_main.c; $(DO_UI_LCC)
+$(Q3UIDIR)/vm/ui_gameinfo.asm : $(Q3UIDIR)/ui_gameinfo.c; $(DO_UI_LCC)
+$(Q3UIDIR)/vm/ui_atoms.asm : $(Q3UIDIR)/ui_atoms.c; $(DO_UI_LCC)
+$(Q3UIDIR)/vm/ui_botladder.asm : $(Q3UIDIR)/ui_botladder.c; $(DO_UI_LCC)
+$(Q3UIDIR)/vm/ui_cinematics.asm : $(Q3UIDIR)/ui_cinematics.c; $(DO_UI_LCC)
+$(Q3UIDIR)/vm/ui_connect.asm : $(Q3UIDIR)/ui_connect.c; $(DO_UI_LCC)
+$(Q3UIDIR)/vm/ui_controls2.asm : $(Q3UIDIR)/ui_controls2.c; $(DO_UI_LCC)
+$(Q3UIDIR)/vm/ui_demo2.asm : $(Q3UIDIR)/ui_demo2.c; $(DO_UI_LCC)
+$(Q3UIDIR)/vm/ui_mfield.asm : $(Q3UIDIR)/ui_mfield.c; $(DO_UI_LCC)
+$(Q3UIDIR)/vm/ui_credits.asm : $(Q3UIDIR)/ui_credits.c; $(DO_UI_LCC)
+$(Q3UIDIR)/vm/ui_menu.asm : $(Q3UIDIR)/ui_menu.c; $(DO_UI_LCC)
+$(Q3UIDIR)/vm/ui_ingame.asm : $(Q3UIDIR)/ui_ingame.c; $(DO_UI_LCC)
+$(Q3UIDIR)/vm/ui_confirm.asm : $(Q3UIDIR)/ui_confirm.c; $(DO_UI_LCC)
+$(Q3UIDIR)/vm/ui_setup.asm : $(Q3UIDIR)/ui_setup.c; $(DO_UI_LCC)
+$(Q3UIDIR)/vm/ui_options.asm : $(Q3UIDIR)/ui_options.c; $(DO_UI_LCC)
+$(Q3UIDIR)/vm/ui_display.asm : $(Q3UIDIR)/ui_display.c; $(DO_UI_LCC)
+$(Q3UIDIR)/vm/ui_sound.asm : $(Q3UIDIR)/ui_sound.c; $(DO_UI_LCC)
+$(Q3UIDIR)/vm/ui_network.asm : $(Q3UIDIR)/ui_network.c; $(DO_UI_LCC)
+$(Q3UIDIR)/vm/ui_playermodel.asm : $(Q3UIDIR)/ui_playermodel.c; $(DO_UI_LCC)
+$(Q3UIDIR)/vm/ui_players.asm : $(Q3UIDIR)/ui_players.c; $(DO_UI_LCC)
+$(Q3UIDIR)/vm/ui_playersettings.asm : $(Q3UIDIR)/ui_playersettings.c; $(DO_UI_LCC)
+$(Q3UIDIR)/vm/ui_preferences.asm : $(Q3UIDIR)/ui_preferences.c; $(DO_UI_LCC)
+$(Q3UIDIR)/vm/ui_qmenu.asm : $(Q3UIDIR)/ui_qmenu.c; $(DO_UI_LCC)
+$(Q3UIDIR)/vm/ui_serverinfo.asm : $(Q3UIDIR)/ui_serverinfo.c; $(DO_UI_LCC)
+$(Q3UIDIR)/vm/ui_servers2.asm : $(Q3UIDIR)/ui_servers2.c; $(DO_UI_LCC)
+$(Q3UIDIR)/vm/ui_sparena.asm : $(Q3UIDIR)/ui_sparena.c; $(DO_UI_LCC)
+$(Q3UIDIR)/vm/ui_specifyserver.asm : $(Q3UIDIR)/ui_specifyserver.c; $(DO_UI_LCC)
+$(Q3UIDIR)/vm/ui_sppostgame.asm : $(Q3UIDIR)/ui_sppostgame.c; $(DO_UI_LCC)
+$(Q3UIDIR)/vm/ui_splevel.asm : $(Q3UIDIR)/ui_splevel.c; $(DO_UI_LCC)
+$(Q3UIDIR)/vm/ui_spskill.asm : $(Q3UIDIR)/ui_spskill.c; $(DO_UI_LCC)
+$(Q3UIDIR)/vm/ui_startserver.asm : $(Q3UIDIR)/ui_startserver.c; $(DO_UI_LCC)
+$(Q3UIDIR)/vm/ui_team.asm : $(Q3UIDIR)/ui_team.c; $(DO_UI_LCC)
+$(Q3UIDIR)/vm/ui_video.asm : $(Q3UIDIR)/ui_video.c; $(DO_UI_LCC)
+$(Q3UIDIR)/vm/ui_addbots.asm : $(Q3UIDIR)/ui_addbots.c; $(DO_UI_LCC)
+$(Q3UIDIR)/vm/ui_removebots.asm : $(Q3UIDIR)/ui_removebots.c; $(DO_UI_LCC)
+$(Q3UIDIR)/vm/ui_teamorders.asm : $(Q3UIDIR)/ui_teamorders.c; $(DO_UI_LCC)
+$(Q3UIDIR)/vm/ui_cdkey.asm : $(Q3UIDIR)/ui_cdkey.c; $(DO_UI_LCC)
+$(Q3UIDIR)/vm/ui_mods.asm : $(Q3UIDIR)/ui_mods.c; $(DO_UI_LCC)
+$(Q3UIDIR)/vm/bg_misc.asm : $(GDIR)/bg_misc.c; $(DO_UI_LCC)
+$(Q3UIDIR)/vm/bg_lib.asm : $(GDIR)/bg_lib.c; $(DO_UI_LCC)
+$(Q3UIDIR)/vm/q_math.asm : $(GDIR)/q_math.c; $(DO_UI_LCC)
+$(Q3UIDIR)/vm/q_shared.asm : $(GDIR)/q_shared.c; $(DO_UI_LCC)
 
 #############################################################################
 # CGAME
