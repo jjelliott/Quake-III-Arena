@@ -33,6 +33,8 @@ MAIN MENU
 
 
 #define ID_SINGLEPLAYER			10
+
+#define ID_BOTLADDER			18
 #define ID_MULTIPLAYER			11
 #define ID_SETUP				12
 #define ID_DEMOS				13
@@ -49,6 +51,7 @@ typedef struct {
 	menuframework_s	menu;
 
 	menutext_s		singleplayer;
+	menutext_s		botladder;
 	menutext_s		multiplayer;
 	menutext_s		setup;
 	menutext_s		demos;
@@ -100,6 +103,10 @@ void Main_MenuEvent (void* ptr, int event) {
 		UI_SPLevelMenu();
 		break;
 
+	case ID_BOTLADDER:
+		UI_BotladderMenu();
+		break;
+
 	case ID_MULTIPLAYER:
 		UI_ArenaServersMenu();
 		break;
@@ -120,10 +127,10 @@ void Main_MenuEvent (void* ptr, int event) {
 		UI_ModsMenu();
 		break;
 
-	case ID_TEAMARENA:
-		trap_Cvar_Set( "fs_game", "missionpack");
-		trap_Cmd_ExecuteText( EXEC_APPEND, "vid_restart;" );
-		break;
+	// case ID_TEAMARENA:
+	// 	trap_Cvar_Set( "fs_game", "missionpack");
+	// 	trap_Cmd_ExecuteText( EXEC_APPEND, "vid_restart;" );
+	// 	break;
 
 	case ID_EXIT:
 		UI_ConfirmMenu( "EXIT GAME?", NULL, MainMenu_ExitAction );
@@ -236,23 +243,7 @@ UI_TeamArenaExists
 ===============
 */
 static qboolean UI_TeamArenaExists( void ) {
-	int		numdirs;
-	char	dirlist[2048];
-	char	*dirptr;
-  char  *descptr;
-	int		i;
-	int		dirlen;
 
-	numdirs = trap_FS_GetFileList( "$modlist", "", dirlist, sizeof(dirlist) );
-	dirptr  = dirlist;
-	for( i = 0; i < numdirs; i++ ) {
-		dirlen = strlen( dirptr ) + 1;
-    descptr = dirptr + dirlen;
-		if (Q_stricmp(dirptr, "missionpack") == 0) {
-			return qtrue;
-		}
-    dirptr += dirlen + strlen(descptr) + 1;
-	}
 	return qfalse;
 }
 
@@ -320,7 +311,16 @@ void UI_MainMenu( void ) {
 	s_main.singleplayer.string				= "SINGLE PLAYER";
 	s_main.singleplayer.color				= color_red;
 	s_main.singleplayer.style				= style;
-
+	y += MAIN_MENU_VERTICAL_SPACING;
+	s_main.botladder.generic.type			= MTYPE_PTEXT;
+	s_main.botladder.generic.flags		= QMF_CENTER_JUSTIFY|QMF_PULSEIFFOCUS;
+	s_main.botladder.generic.x			= 320;
+	s_main.botladder.generic.y			= y;
+	s_main.botladder.generic.id			= ID_BOTLADDER;
+	s_main.botladder.generic.callback		= Main_MenuEvent;
+	s_main.botladder.string				= "BOT LADDER";
+	s_main.botladder.color				= color_red;
+	s_main.botladder.style				= style;
 	y += MAIN_MENU_VERTICAL_SPACING;
 	s_main.multiplayer.generic.type			= MTYPE_PTEXT;
 	s_main.multiplayer.generic.flags		= QMF_CENTER_JUSTIFY|QMF_PULSEIFFOCUS;
@@ -402,6 +402,7 @@ void UI_MainMenu( void ) {
 	s_main.exit.style						= style;
 
 	Menu_AddItem( &s_main.menu,	&s_main.singleplayer );
+	Menu_AddItem( &s_main.menu,	&s_main.botladder );
 	Menu_AddItem( &s_main.menu,	&s_main.multiplayer );
 	Menu_AddItem( &s_main.menu,	&s_main.setup );
 	Menu_AddItem( &s_main.menu,	&s_main.demos );

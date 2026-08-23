@@ -598,6 +598,14 @@ void UI_SPLevelMenu_f( void );
 void UI_SPLevelMenu_ReInit( void );
 
 //
+// ui_botladder.c
+//
+void UI_BotladderMenu_Cache( void );
+void UI_BotladderMenu( void );
+void UI_BotladderMenu_f( void );
+void UI_BotladderMenu_ReInit( void );
+
+//
 // ui_spArena.c
 //
 void UI_SPArena_Start( const char *arenaInfo );
