@@ -596,6 +596,7 @@ void UI_SPLevelMenu_Cache( void );
 void UI_SPLevelMenu( void );
 void UI_SPLevelMenu_f( void );
 void UI_SPLevelMenu_ReInit( void );
+void UI_SPLevel_Start( const char *arenaInfo );
 
 //
 // ui_botladder.c
@@ -619,7 +620,7 @@ void UI_SPPostgameMenu_f( void );
 //
 // ui_spSkill.c
 //
-void UI_SPSkillMenu( const char *arenaInfo );
+void UI_SPSkillMenu( const char *arenaInfo, qboolean ladder );
 void UI_SPSkillMenu_Cache( void );
 
 //

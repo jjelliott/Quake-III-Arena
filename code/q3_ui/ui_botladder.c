@@ -489,7 +489,7 @@ static void UI_BotladderMenu_NextEvent( void* ptr, int notification ) {
 		selectedArena = 0;
 	}
 
-	UI_SPSkillMenu( levelMenuInfo.selectedArenaInfo );
+	UI_SPSkillMenu( levelMenuInfo.selectedArenaInfo, qtrue );
 }
 
 

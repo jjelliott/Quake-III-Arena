@@ -68,12 +68,14 @@ typedef struct {
 	menubitmap_s	item_fight;
 
 	const char		*arenaInfo;
+	qboolean		ladder;
 	qhandle_t		skillpics[5];
 	sfxHandle_t		nightmareSound;
 	sfxHandle_t		silenceSound;
 } skillMenuInfo_t;
 
 static skillMenuInfo_t	skillMenuInfo;
+
 
 
 static void SetSkillColor( int skill, vec4_t color ) {
@@ -138,7 +140,10 @@ static void UI_SPSkillMenu_FightEvent( void *ptr, int notification ) {
 	if (notification != QM_ACTIVATED)
 		return;
 
-	UI_SPArena_Start( skillMenuInfo.arenaInfo );
+	if (skillMenuInfo.ladder)
+		UI_SPArena_Start( skillMenuInfo.arenaInfo );
+	else
+		UI_SPLevel_Start(skillMenuInfo.arenaInfo);
 }
 
 
@@ -321,9 +326,10 @@ static void UI_SPSkillMenu_Init( void ) {
 }
 
 
-void UI_SPSkillMenu( const char *arenaInfo ) {
+void UI_SPSkillMenu( const char *arenaInfo, qboolean ladder ) {
 	UI_SPSkillMenu_Init();
 	skillMenuInfo.arenaInfo = arenaInfo;
+	skillMenuInfo.ladder = ladder;
 	UI_PushMenu( &skillMenuInfo.menu );
 	Menu_SetCursorToItem( &skillMenuInfo.menu, &skillMenuInfo.item_fight );
 }
