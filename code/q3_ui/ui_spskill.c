@@ -143,7 +143,7 @@ static void UI_SPSkillMenu_FightEvent( void *ptr, int notification ) {
 	if (skillMenuInfo.ladder)
 		UI_SPArena_Start( skillMenuInfo.arenaInfo );
 	else
-		UI_SPLevel_Start(skillMenuInfo.arenaInfo);
+		UI_SPLevel_Start();
 }
 
 

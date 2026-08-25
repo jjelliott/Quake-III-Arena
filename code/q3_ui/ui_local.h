@@ -596,7 +596,7 @@ void UI_SPLevelMenu_Cache( void );
 void UI_SPLevelMenu( void );
 void UI_SPLevelMenu_f( void );
 void UI_SPLevelMenu_ReInit( void );
-void UI_SPLevel_Start( const char *arenaInfo );
+void UI_SPLevel_Start(  );
 
 //
 // ui_botladder.c

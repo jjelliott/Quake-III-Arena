@@ -31,7 +31,6 @@ SINGLE PLAYER LEVEL SELECT MENU
 #include "ui_local.h"
 
 #define MAX_SERVERMAPS	64
-#define MAX_NAMELENGTH	16
 #define MAX_SP_EPISODES 512
 
 #define ART_LEVELFRAME_FOCUS		"menu/art/maps_select"
@@ -88,19 +87,13 @@ typedef struct {
 } episodeInfo_t;
 
 typedef struct {
-	menuframework_s	menu;
-	menutext_s		item_banner;
-	menubitmap_s	item_episode;
-	menutext_s	item_episode_label;
-	menubitmap_s	item_map;
-	menubitmap_s	item_back;
-	menubitmap_s	item_next;
-
-	int				currentmap;
-	int				nummaps;
-	int				page;
-	int				maxpages;
-	char			maplist[MAX_SERVERMAPS][MAX_NAMELENGTH];
+	int arenaIdx;
+	qhandle_t levelshotHandle;
+	char displayName[MAX_NAME_LENGTH];
+	char bspName[MAX_NAME_LENGTH];
+	qboolean skipSkillSelect;
+	int order;
+} episodeMapInfo_t;
 
 typedef struct {
 	menuframework_s	menu;
@@ -131,8 +124,6 @@ typedef struct {
 	menubitmap_s	framer;
 	menubitmap_s	preview;
 	menulist_s		list;
-
-	char names[MAX_ARENAS][64];
 } mapMenuInfo_t;
 
 static singleMenuInfo_t singleMenuInfo;
@@ -147,11 +138,8 @@ static qboolean episodeSelected;
 static int selectedMapIdx;
 static qboolean mapSelected;
 
-static int episodeMapArenaIdxs[MAX_ARENAS];
-static int numEpisodeMaps;
-static int levelshotHandles[MAX_ARENAS];
-
-static qboolean skipSkillSelect;
+static episodeMapInfo_t episodeMaps[MAX_ARENAS];
+static int episodeMapCount;
 
 static qhandle_t NO_SELECTION;
 
@@ -160,16 +148,28 @@ static void SPEpisode_BackEvent( void *ptr, int event) {
 	UI_PopMenu();
 }
 
+static qboolean shouldSwap(int j) {
+	if (selectedEpisodeIdx == 0) return Q_stricmp(episodeMaps[j].bspName, episodeMaps[j+1].bspName) > 0;
+	if (episodeMaps[j].order > episodeMaps[j+1].order) return qtrue;
+	if (episodeMaps[j].order == episodeMaps[j+1].order && Q_stricmp(episodeMaps[j].bspName, episodeMaps[j+1].bspName) > 0) return qtrue;
+
+
+	return qfalse;
+}
+
 static void SPEpisode_SelectEvent( void *ptr, int event) {
 
-	int i, allMapCount;
+	const char *skipSkillSelectStr;
+	int i, j, allMapCount;
 	char *episodeId;
 	const char	*arenaInfo;
+	episodeMapInfo_t temp;
+
 	if (event != QM_ACTIVATED) return;
 	selectedEpisodeIdx = episodeMenuInfo.list.curvalue;
 	episodeSelected = qtrue;
 
-	numEpisodeMaps = 0;
+	episodeMapCount = 0;
 	allMapCount = UI_GetNumArenas();
 	for (i = 0; i < allMapCount; i++) {
 		arenaInfo = UI_GetArenaInfoByNumber(i);
@@ -185,11 +185,35 @@ static void SPEpisode_SelectEvent( void *ptr, int event) {
 			continue;
 		}
 		// is q3sp and right episode
-		episodeMapArenaIdxs[numEpisodeMaps] = i;
-		levelshotHandles[numEpisodeMaps] = trap_R_RegisterShaderNoMip(va( "levelshots/%s.tga",  Info_ValueForKey(arenaInfo, "map") ));
-		if (!levelshotHandles[numEpisodeMaps]) levelshotHandles[numEpisodeMaps] = trap_R_RegisterShaderNoMip(ART_MAP_UNKNOWN);
-		numEpisodeMaps++;
+		episodeMaps[episodeMapCount].arenaIdx = i;
+		episodeMaps[episodeMapCount].levelshotHandle = trap_R_RegisterShaderNoMip(va( "levelshots/%s.tga",  Info_ValueForKey(arenaInfo, "map") ));
+		Q_strncpyz(episodeMaps[episodeMapCount].bspName, Info_ValueForKey(arenaInfo, "map"), sizeof( episodeMaps[episodeMapCount].bspName));
+		if (!episodeMaps[episodeMapCount].levelshotHandle) episodeMaps[episodeMapCount].levelshotHandle = trap_R_RegisterShaderNoMip(ART_MAP_UNKNOWN);
+		skipSkillSelectStr = Info_ValueForKey(arenaInfo, "skipSkillSelect");
+		if (!Q_stricmp(skipSkillSelectStr, "y") || !Q_stricmp(skipSkillSelectStr, "true") || !strcmp(skipSkillSelectStr, "1")) {
+			episodeMaps[episodeMapCount].skipSkillSelect = qtrue;
+		} else {
+			episodeMaps[episodeMapCount].skipSkillSelect = qfalse;
+		}
+		Q_strncpyz(episodeMaps[episodeMapCount].displayName, Info_ValueForKey(arenaInfo, "longname"), sizeof( episodeMaps[episodeMapCount].displayName));
+		if (!episodeMaps[episodeMapCount].displayName[0]) {
+			Q_strncpyz(episodeMaps[episodeMapCount].displayName, episodeMaps[episodeMapCount].bspName, sizeof( episodeMaps[episodeMapCount].displayName));
+		}
+		episodeMaps[episodeMapCount].order = atoi(Info_ValueForKey(arenaInfo, "episodeorder"));
+		episodeMapCount++;
 	}
+
+	for (i = 0; i < episodeMapCount; i++) {
+		for (j = 0; j < episodeMapCount -i-1; j++) {
+			if (shouldSwap(j)) {
+				temp = episodeMaps[j];
+				episodeMaps[j] = episodeMaps[j+1];
+				episodeMaps[j+1] = temp;
+			}
+		}
+	}
+
+	singleMenuInfo.map.generic.flags &= ~QMF_GRAYED;
 
 	UI_PopMenu();
 }
@@ -207,6 +231,7 @@ static void SPEpisode_PreviewDraw(void *self) {
 	menubitmap_s *b;
 	b = (menubitmap_s *)self;
 	UI_DrawHandlePic(b->generic.x, b->generic.y, b->width, b->height, spEpisodes[episodeMenuInfo.list.curvalue].shotHandle);
+	UI_DrawString(b->generic.x + b->width / 2, b->generic.y + b->height + 8, spEpisodes[episodeMenuInfo.list.curvalue].name, UI_CENTER|UI_SMALLFONT, color_white);
 
 }
 static void SPEpisode_Init() {
@@ -279,7 +304,7 @@ static void SPEpisode_Init() {
 	episodeMenuInfo.list.generic.id			= ID_LIST;
 	episodeMenuInfo.list.generic.x			= 240;
 	episodeMenuInfo.list.generic.y			= 130;
-	episodeMenuInfo.list.width				= 32;
+	episodeMenuInfo.list.width				= 28;
 	episodeMenuInfo.list.height				= 14;
 
 	SPEpisode_LoadList();
@@ -304,17 +329,8 @@ static void SPMap_BackEvent( void *ptr, int event) {
 }
 
 static void SPMap_SelectEvent( void *ptr, int event) {
-	const char	*arenaInfo;
-	const char *skipSkillSelectStr;
 	if (event != QM_ACTIVATED) return;
 	selectedMapIdx = mapMenuInfo.list.curvalue;
-	arenaInfo = UI_GetArenaInfoByNumber(episodeMapArenaIdxs[selectedMapIdx]);
-	skipSkillSelectStr = Info_ValueForKey(arenaInfo, "skipSkillSelect");
-	if (!Q_stricmp(skipSkillSelectStr, "y") || !Q_stricmp(skipSkillSelectStr, "true") || !strcmp(skipSkillSelectStr, "1")) {
-		skipSkillSelect = qtrue;
-	} else {
-		skipSkillSelect = qfalse;
-	}
 	singleMenuInfo.next.generic.flags &= ~QMF_GRAYED;
 	mapSelected = qtrue;
 	UI_PopMenu();
@@ -322,16 +338,10 @@ static void SPMap_SelectEvent( void *ptr, int event) {
 
 static void SPMap_LoadList() {
 	int i;
-	const char	*arenaInfo;
 
-	mapMenuInfo.list.numitems = numEpisodeMaps;
-	for (i = 0; i<numEpisodeMaps; i++) {
-		arenaInfo = UI_GetArenaInfoByNumber(episodeMapArenaIdxs[i]);
-		Q_strncpyz(mapMenuInfo.names[i], Info_ValueForKey(arenaInfo, "longname"), sizeof( mapMenuInfo.names[i]));
-		if (!mapMenuInfo.names[i][0]) {
-			Q_strncpyz(mapMenuInfo.names[i], Info_ValueForKey(arenaInfo, "map"), sizeof( mapMenuInfo.names[i]));
-		}
-		mapMenuInfo.list.itemnames[i] = mapMenuInfo.names[i];
+	mapMenuInfo.list.numitems = episodeMapCount;
+	for (i = 0; i<episodeMapCount; i++) {
+		mapMenuInfo.list.itemnames[i] = episodeMaps[i].bspName;
 	}
 	if (selectedMapIdx >= 0) mapMenuInfo.list.curvalue = selectedMapIdx;
 }
@@ -339,7 +349,8 @@ static void SPMap_LoadList() {
 static void SPMap_PreviewDraw(void *self) {
 	menubitmap_s *b;
 	b = (menubitmap_s *)self;
-		UI_DrawHandlePic(b->generic.x, b->generic.y, b->width, b->height, levelshotHandles[mapMenuInfo.list.curvalue]);
+		UI_DrawHandlePic(b->generic.x, b->generic.y, b->width, b->height, episodeMaps[mapMenuInfo.list.curvalue].levelshotHandle);
+	UI_DrawString(b->generic.x + b->width / 2, b->generic.y + b->height + 8, episodeMaps[mapMenuInfo.list.curvalue].displayName, UI_CENTER|UI_SMALLFONT, color_white);
 
 }
 
@@ -408,7 +419,7 @@ static void SPMap_Init() {
 	mapMenuInfo.list.generic.id			= ID_LIST;
 	mapMenuInfo.list.generic.x			= 240;
 	mapMenuInfo.list.generic.y			= 130;
-	mapMenuInfo.list.width				= 32;
+	mapMenuInfo.list.width				= 28;
 	mapMenuInfo.list.height				= 14;
 
 	SPMap_LoadList();
@@ -439,10 +450,10 @@ static void UI_SPLevelMenu_NextEvent( void* ptr, int notification ) {
 		return;
 	}
 	if (!mapSelected) return;
-	if (skipSkillSelect) {
-		UI_SPLevel_Start(UI_GetArenaInfoByNumber(episodeMapArenaIdxs[selectedMapIdx]));
+	if (episodeMaps[selectedMapIdx].skipSkillSelect) {
+		UI_SPLevel_Start(UI_GetArenaInfoByNumber(episodeMaps[selectedMapIdx].arenaIdx));
 	} else {
-		UI_SPSkillMenu(UI_GetArenaInfoByNumber(episodeMapArenaIdxs[selectedMapIdx]), qfalse);
+		UI_SPSkillMenu(UI_GetArenaInfoByNumber(episodeMaps[selectedMapIdx].arenaIdx), qfalse);
 	}
 }
 
@@ -493,15 +504,13 @@ static void SPLevel_EpisodeEvent( void *ptr, int event) {
 }
 
 static void SPLevel_MapDraw(void *self) {
-	const char	*arenaInfo;
 	menubitmap_s *b;
 	b = (menubitmap_s *)self;
 	if (b->generic.parent->cursor == b->generic.menuPosition) {
 		UI_FillRect(b->generic.x-3, b->generic.y-3, b->width+6, b->height+6, color_orange);
 	}
 	if (mapSelected) {
-		arenaInfo = UI_GetArenaInfoByNumber(episodeMapArenaIdxs[selectedMapIdx]);
-		UI_DrawHandlePic(b->generic.x, b->generic.y, b->width, b->height, levelshotHandles[selectedMapIdx]);
+		UI_DrawHandlePic(b->generic.x, b->generic.y, b->width, b->height, episodeMaps[selectedMapIdx].levelshotHandle);
 	} else {
 		UI_DrawHandlePic(b->generic.x, b->generic.y, b->width, b->height, NO_SELECTION);
 
@@ -512,7 +521,7 @@ static void SPLevel_MapDraw(void *self) {
 		}
 
 	}
-	UI_DrawString(b->generic.x + b->width / 2, b->generic.y + b->height + 8, mapSelected ? Info_ValueForKey(arenaInfo, "longname") : "No map selected", UI_CENTER|UI_SMALLFONT, color_white);
+	UI_DrawString(b->generic.x + b->width / 2, b->generic.y + b->height + 8, mapSelected ? episodeMaps[selectedEpisodeIdx].displayName : "No map selected", UI_CENTER|UI_SMALLFONT, color_white);
 }
 
 static void SPLevel_MapEvent( void *ptr, int event) {
@@ -758,7 +767,7 @@ UI_SPLevelMenu_ReInit
 void UI_SPLevelMenu_ReInit( void ) {
 }
 
-void UI_SPLevel_Start(const char *arenaInfo) {
+void UI_SPLevel_Start() {
 	char	*map;
 
 
@@ -766,6 +775,5 @@ void UI_SPLevel_Start(const char *arenaInfo) {
 
 	trap_Cvar_SetValue( "g_gametype", GT_SINGLE_PLAYER );
 
-	map = Info_ValueForKey( arenaInfo, "map" );
-	trap_Cmd_ExecuteText( EXEC_APPEND, va( "map %s\n", map ) );
+	trap_Cmd_ExecuteText( EXEC_APPEND, va( "map %s\n", episodeMaps[selectedMapIdx].bspName ) );
 }
