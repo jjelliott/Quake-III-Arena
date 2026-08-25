@@ -84,6 +84,7 @@ typedef struct {
 	char id[64];
 	char name[64];
 	char levelshot[MAX_QPATH];
+	qhandle_t shotHandle;
 } episodeInfo_t;
 
 typedef struct {
@@ -101,6 +102,13 @@ typedef struct {
 	int				maxpages;
 	char			maplist[MAX_SERVERMAPS][MAX_NAMELENGTH];
 
+typedef struct {
+	menuframework_s	menu;
+	menutext_s		banner;
+	menubitmap_s	episode;
+	menubitmap_s	map;
+	menubitmap_s	back;
+	menubitmap_s	next;
 } singleMenuInfo_t;
 
 typedef struct {
@@ -110,6 +118,7 @@ typedef struct {
 	menubitmap_s	next;
 	menubitmap_s	framel;
 	menubitmap_s	framer;
+	menubitmap_s	preview;
 	menulist_s		list;
 } episodeMenuInfo_t;
 
@@ -120,7 +129,10 @@ typedef struct {
 	menubitmap_s	next;
 	menubitmap_s	framel;
 	menubitmap_s	framer;
+	menubitmap_s	preview;
 	menulist_s		list;
+
+	char names[MAX_ARENAS][64];
 } mapMenuInfo_t;
 
 static singleMenuInfo_t singleMenuInfo;
@@ -137,8 +149,11 @@ static qboolean mapSelected;
 
 static int episodeMapArenaIdxs[MAX_ARENAS];
 static int numEpisodeMaps;
+static int levelshotHandles[MAX_ARENAS];
 
 static qboolean skipSkillSelect;
+
+static qhandle_t NO_SELECTION;
 
 static void SPEpisode_BackEvent( void *ptr, int event) {
 	if (event != QM_ACTIVATED) return;
@@ -171,6 +186,8 @@ static void SPEpisode_SelectEvent( void *ptr, int event) {
 		}
 		// is q3sp and right episode
 		episodeMapArenaIdxs[numEpisodeMaps] = i;
+		levelshotHandles[numEpisodeMaps] = trap_R_RegisterShaderNoMip(va( "levelshots/%s.tga",  Info_ValueForKey(arenaInfo, "map") ));
+		if (!levelshotHandles[numEpisodeMaps]) levelshotHandles[numEpisodeMaps] = trap_R_RegisterShaderNoMip(ART_MAP_UNKNOWN);
 		numEpisodeMaps++;
 	}
 
@@ -186,12 +203,18 @@ static void SPEpisode_LoadList() {
 	}
 	if (episodeSelected) episodeMenuInfo.list.curvalue = selectedEpisodeIdx;
 }
+static void SPEpisode_PreviewDraw(void *self) {
+	menubitmap_s *b;
+	b = (menubitmap_s *)self;
+	UI_DrawHandlePic(b->generic.x, b->generic.y, b->width, b->height, spEpisodes[episodeMenuInfo.list.curvalue].shotHandle);
 
+}
 static void SPEpisode_Init() {
 	episodeSelected = qfalse;
+	selectedMapIdx = 0;
 	mapSelected = qfalse;
 
-	singleMenuInfo.item_next.generic.flags |= QMF_GRAYED;
+	singleMenuInfo.next.generic.flags |= QMF_GRAYED;
 	memset( &episodeMenuInfo, 0, sizeof(episodeMenuInfo) );
 	episodeMenuInfo.menu.fullscreen = qtrue;
 	episodeMenuInfo.menu.wrapAround = qtrue;
@@ -225,6 +248,15 @@ static void SPEpisode_Init() {
 	episodeMenuInfo.next.height					= 64;
 	episodeMenuInfo.next.focuspic				= ART_NEXT1;
 
+	episodeMenuInfo.preview.generic.type		= MTYPE_BITMAP;
+	episodeMenuInfo.preview.generic.flags		= QMF_LEFT_JUSTIFY | QMF_OWNERDRAW;
+	episodeMenuInfo.preview.generic.id			= ID_PICTURE0;
+	episodeMenuInfo.preview.generic.ownerdraw	= SPEpisode_PreviewDraw;
+	episodeMenuInfo.preview.generic.x			= 400;
+	episodeMenuInfo.preview.generic.y			= 168;
+	episodeMenuInfo.preview.width				= 128;
+	episodeMenuInfo.preview.height				= 128;
+
 	episodeMenuInfo.framel.generic.type		= MTYPE_BITMAP;
 	episodeMenuInfo.framel.generic.name		= ART_FRAMEL;
 	episodeMenuInfo.framel.generic.flags		= QMF_INACTIVE;
@@ -255,6 +287,7 @@ static void SPEpisode_Init() {
 	Menu_AddItem( &episodeMenuInfo.menu, &episodeMenuInfo.banner );
 	Menu_AddItem( &episodeMenuInfo.menu, &episodeMenuInfo.framel );
 	Menu_AddItem( &episodeMenuInfo.menu, &episodeMenuInfo.framer );
+	Menu_AddItem( &episodeMenuInfo.menu, &episodeMenuInfo.preview );
 	Menu_AddItem( &episodeMenuInfo.menu, &episodeMenuInfo.list );
 	Menu_AddItem( &episodeMenuInfo.menu, &episodeMenuInfo.back );
 	Menu_AddItem( &episodeMenuInfo.menu, &episodeMenuInfo.next );
@@ -282,7 +315,7 @@ static void SPMap_SelectEvent( void *ptr, int event) {
 	} else {
 		skipSkillSelect = qfalse;
 	}
-	singleMenuInfo.item_next.generic.flags &= ~QMF_GRAYED;
+	singleMenuInfo.next.generic.flags &= ~QMF_GRAYED;
 	mapSelected = qtrue;
 	UI_PopMenu();
 }
@@ -294,9 +327,20 @@ static void SPMap_LoadList() {
 	mapMenuInfo.list.numitems = numEpisodeMaps;
 	for (i = 0; i<numEpisodeMaps; i++) {
 		arenaInfo = UI_GetArenaInfoByNumber(episodeMapArenaIdxs[i]);
-		mapMenuInfo.list.itemnames[i] = Info_ValueForKey(arenaInfo, "longname");
+		Q_strncpyz(mapMenuInfo.names[i], Info_ValueForKey(arenaInfo, "longname"), sizeof( mapMenuInfo.names[i]));
+		if (!mapMenuInfo.names[i][0]) {
+			Q_strncpyz(mapMenuInfo.names[i], Info_ValueForKey(arenaInfo, "map"), sizeof( mapMenuInfo.names[i]));
+		}
+		mapMenuInfo.list.itemnames[i] = mapMenuInfo.names[i];
 	}
 	if (selectedMapIdx >= 0) mapMenuInfo.list.curvalue = selectedMapIdx;
+}
+
+static void SPMap_PreviewDraw(void *self) {
+	menubitmap_s *b;
+	b = (menubitmap_s *)self;
+		UI_DrawHandlePic(b->generic.x, b->generic.y, b->width, b->height, levelshotHandles[mapMenuInfo.list.curvalue]);
+
 }
 
 static void SPMap_Init() {
@@ -333,6 +377,15 @@ static void SPMap_Init() {
 	mapMenuInfo.next.height					= 64;
 	mapMenuInfo.next.focuspic				= ART_NEXT1;
 
+	mapMenuInfo.preview.generic.type		= MTYPE_BITMAP;
+	mapMenuInfo.preview.generic.flags		= QMF_LEFT_JUSTIFY | QMF_OWNERDRAW;
+	mapMenuInfo.preview.generic.id			= ID_PICTURE0;
+	mapMenuInfo.preview.generic.ownerdraw	= SPMap_PreviewDraw;
+	mapMenuInfo.preview.generic.x			= 400;
+	mapMenuInfo.preview.generic.y			= 168;
+	mapMenuInfo.preview.width				= 128;
+	mapMenuInfo.preview.height				= 128;
+
 	mapMenuInfo.framel.generic.type		= MTYPE_BITMAP;
 	mapMenuInfo.framel.generic.name		= ART_FRAMEL;
 	mapMenuInfo.framel.generic.flags		= QMF_INACTIVE;
@@ -364,6 +417,7 @@ static void SPMap_Init() {
 	Menu_AddItem( &mapMenuInfo.menu, &mapMenuInfo.framel );
 	Menu_AddItem( &mapMenuInfo.menu, &mapMenuInfo.framer );
 	Menu_AddItem( &mapMenuInfo.menu, &mapMenuInfo.list );
+	Menu_AddItem(&mapMenuInfo.menu, &mapMenuInfo.preview);
 	Menu_AddItem( &mapMenuInfo.menu, &mapMenuInfo.back );
 	Menu_AddItem( &mapMenuInfo.menu, &mapMenuInfo.next );
 }
@@ -421,7 +475,15 @@ void UI_SPLevelMenu_Cache( void ) {
 
 static void SPLevel_EpisodeDraw(void *self) {
 	menubitmap_s *b = (menubitmap_s *)self;
-	UI_FillRect(b->generic.x, b->generic.y, b->width, b->height, color_orange);
+	if (b->generic.parent->cursor == b->generic.menuPosition) {
+		UI_FillRect(b->generic.x-3, b->generic.y-3, b->width+6, b->height+6, color_orange);
+	}
+	if (episodeSelected) {
+		UI_DrawHandlePic(b->generic.x, b->generic.y, b->width, b->height, spEpisodes[selectedEpisodeIdx].shotHandle);
+	} else {
+
+		UI_DrawHandlePic(b->generic.x, b->generic.y, b->width, b->height, NO_SELECTION);
+	}
 	UI_DrawString(b->generic.x + b->width / 2, b->generic.y + b->height + 8, episodeSelected ? spEpisodes[selectedEpisodeIdx].name : "No episode selected", UI_CENTER|UI_SMALLFONT, color_white);
 }
 
@@ -433,9 +495,23 @@ static void SPLevel_EpisodeEvent( void *ptr, int event) {
 static void SPLevel_MapDraw(void *self) {
 	const char	*arenaInfo;
 	menubitmap_s *b;
-	arenaInfo = UI_GetArenaInfoByNumber(episodeMapArenaIdxs[selectedMapIdx]);
 	b = (menubitmap_s *)self;
-	UI_FillRect(b->generic.x, b->generic.y, b->width, b->height, color_blue);
+	if (b->generic.parent->cursor == b->generic.menuPosition) {
+		UI_FillRect(b->generic.x-3, b->generic.y-3, b->width+6, b->height+6, color_orange);
+	}
+	if (mapSelected) {
+		arenaInfo = UI_GetArenaInfoByNumber(episodeMapArenaIdxs[selectedMapIdx]);
+		UI_DrawHandlePic(b->generic.x, b->generic.y, b->width, b->height, levelshotHandles[selectedMapIdx]);
+	} else {
+		UI_DrawHandlePic(b->generic.x, b->generic.y, b->width, b->height, NO_SELECTION);
+
+		if (b->generic.flags & QMF_GRAYED) {
+			vec4_t darkDim = {0.00f, 0.00f, 0.00f, 0.95f};
+			UI_FillRect(b->generic.x, b->generic.y, b->width, b->height, darkDim);
+
+		}
+
+	}
 	UI_DrawString(b->generic.x + b->width / 2, b->generic.y + b->height + 8, mapSelected ? Info_ValueForKey(arenaInfo, "longname") : "No map selected", UI_CENTER|UI_SMALLFONT, color_white);
 }
 
@@ -517,6 +593,7 @@ static void SPMenu_LoadData() {
 	episode = &spEpisodes[0];
 	Q_strncpyz(episode->id, "zzznoep", sizeof(episode->id));
 	Q_strncpyz(episode->name, "Standalone maps", sizeof(episode->name));
+	if (!episode->shotHandle) episode->shotHandle = trap_R_RegisterShaderNoMip(ART_MAP_UNKNOWN);
 
 	spEpisodeCount = 1;
 	count = UI_GetNumArenas();
@@ -544,11 +621,16 @@ static void SPMenu_LoadData() {
 					SPMenu_LoadEpFile(episode->id, buf);
 					if (buf[0]) {
 						SPMenu_ParseEp(buf, info);
+
 						Q_strncpyz(episode->name, Info_ValueForKey(info, "name"), sizeof(episode->name));
 						Q_strncpyz(episode->levelshot, Info_ValueForKey(info, "levelshot"), sizeof(episode->levelshot));
+						episode->shotHandle = trap_R_RegisterShaderNoMip(va( "levelshots/%s.tga", episode->levelshot ) );
+
+
 					} else {
 						Q_strncpyz(episode->name, episode->id, sizeof(episode->name));
 					}
+					if (!episode->shotHandle) episode->shotHandle = trap_R_RegisterShaderNoMip(ART_MAP_UNKNOWN);
 					spEpisodeCount++;
 				}
 			}
@@ -569,6 +651,8 @@ static void UI_SPLevelMenu_Init( void ) {
 	int		count;
 	char	buf[MAX_QPATH];
 
+	if (!NO_SELECTION)	NO_SELECTION = trap_R_RegisterShaderNoMip(ART_MAP_UNKNOWN);
+
 	skill = (int)trap_Cvar_VariableValue( "g_spSkill" );
 	if( skill < 1 || skill > 5 ) {
 		trap_Cvar_Set( "g_spSkill", "3" );
@@ -576,6 +660,7 @@ static void UI_SPLevelMenu_Init( void ) {
 	}
 	selectedEpisodeIdx = -1;
 	episodeSelected = qfalse;
+	selectedMapIdx = -1;
 	mapSelected = qfalse;
 	SPMenu_LoadData();
 
@@ -583,66 +668,61 @@ static void UI_SPLevelMenu_Init( void ) {
 	singleMenuInfo.menu.fullscreen = qtrue;
 	singleMenuInfo.menu.wrapAround = qtrue;
 
-	singleMenuInfo.item_banner.generic.type			= MTYPE_BTEXT;
-	singleMenuInfo.item_banner.generic.x				= 320;
-	singleMenuInfo.item_banner.generic.y				= 16;
-	singleMenuInfo.item_banner.string				= "SINGLE PLAYER";
-	singleMenuInfo.item_banner.color					= color_red;
-	singleMenuInfo.item_banner.style					= UI_CENTER;
+	singleMenuInfo.banner.generic.type			= MTYPE_BTEXT;
+	singleMenuInfo.banner.generic.x				= 320;
+	singleMenuInfo.banner.generic.y				= 16;
+	singleMenuInfo.banner.string				= "SINGLE PLAYER";
+	singleMenuInfo.banner.color					= color_red;
+	singleMenuInfo.banner.style					= UI_CENTER;
 
-	singleMenuInfo.item_episode.generic.type		= MTYPE_BITMAP;
-	singleMenuInfo.item_episode.generic.flags		= QMF_LEFT_JUSTIFY | QMF_PULSEIFFOCUS | QMF_OWNERDRAW;
-	singleMenuInfo.item_episode.generic.ownerdraw	= SPLevel_EpisodeDraw;
-	singleMenuInfo.item_episode.generic.callback	= SPLevel_EpisodeEvent;
-	singleMenuInfo.item_episode.generic.id			= ID_PICTURE0;
-	singleMenuInfo.item_episode.generic.x			= 64;
-	singleMenuInfo.item_episode.generic.y			= 100;
-	singleMenuInfo.item_episode.width				= 240;
-	singleMenuInfo.item_episode.height				= 240;
+	singleMenuInfo.episode.generic.type		= MTYPE_BITMAP;
+	singleMenuInfo.episode.generic.flags		= QMF_LEFT_JUSTIFY | QMF_PULSEIFFOCUS | QMF_OWNERDRAW;
+	singleMenuInfo.episode.generic.ownerdraw	= SPLevel_EpisodeDraw;
+	singleMenuInfo.episode.generic.callback	= SPLevel_EpisodeEvent;
+	singleMenuInfo.episode.generic.id			= ID_PICTURE0;
+	singleMenuInfo.episode.generic.x			= 64;
+	singleMenuInfo.episode.generic.y			= 100;
+	singleMenuInfo.episode.width				= 240;
+	singleMenuInfo.episode.height				= 240;
 
-	singleMenuInfo.item_episode_label.generic.type		= MTYPE_PTEXT;
-	singleMenuInfo.item_episode_label.generic.x			= 64;
-	singleMenuInfo.item_episode_label.generic.y			= 100;
-	singleMenuInfo.item_episode_label.string = "No episode selected";
 
-	singleMenuInfo.item_map.generic.type		= MTYPE_BITMAP;
-	singleMenuInfo.item_map.generic.flags		= QMF_LEFT_JUSTIFY | QMF_PULSEIFFOCUS | QMF_OWNERDRAW;
-	singleMenuInfo.item_map.generic.ownerdraw	= SPLevel_MapDraw;
-	singleMenuInfo.item_map.generic.callback	= SPLevel_MapEvent;
-	singleMenuInfo.item_map.generic.id			= ID_PICTURE1;
-	singleMenuInfo.item_map.generic.x			= 336;
-	singleMenuInfo.item_map.generic.y			= 100;
-	singleMenuInfo.item_map.width				= 240;
-	singleMenuInfo.item_map.height				= 240;
+	singleMenuInfo.map.generic.type		= MTYPE_BITMAP;
+	singleMenuInfo.map.generic.flags		= QMF_LEFT_JUSTIFY | QMF_PULSEIFFOCUS | QMF_OWNERDRAW |QMF_GRAYED;
+	singleMenuInfo.map.generic.ownerdraw	= SPLevel_MapDraw;
+	singleMenuInfo.map.generic.callback	= SPLevel_MapEvent;
+	singleMenuInfo.map.generic.id			= ID_PICTURE1;
+	singleMenuInfo.map.generic.x			= 336;
+	singleMenuInfo.map.generic.y			= 100;
+	singleMenuInfo.map.width				= 240;
+	singleMenuInfo.map.height				= 240;
 
-	singleMenuInfo.item_back.generic.type			= MTYPE_BITMAP;
-	singleMenuInfo.item_back.generic.name			= ART_BACK0;
-	singleMenuInfo.item_back.generic.flags			= QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS;
-	singleMenuInfo.item_back.generic.x				= 0;
-	singleMenuInfo.item_back.generic.y				= 480-64;
-	singleMenuInfo.item_back.generic.callback		= UI_SPLevelMenu_BackEvent;
-	singleMenuInfo.item_back.generic.id				= ID_BACK;
-	singleMenuInfo.item_back.width					= 128;
-	singleMenuInfo.item_back.height					= 64;
-	singleMenuInfo.item_back.focuspic				= ART_BACK1;
+	singleMenuInfo.back.generic.type			= MTYPE_BITMAP;
+	singleMenuInfo.back.generic.name			= ART_BACK0;
+	singleMenuInfo.back.generic.flags			= QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS;
+	singleMenuInfo.back.generic.x				= 0;
+	singleMenuInfo.back.generic.y				= 480-64;
+	singleMenuInfo.back.generic.callback		= UI_SPLevelMenu_BackEvent;
+	singleMenuInfo.back.generic.id				= ID_BACK;
+	singleMenuInfo.back.width					= 128;
+	singleMenuInfo.back.height					= 64;
+	singleMenuInfo.back.focuspic				= ART_BACK1;
 
-	singleMenuInfo.item_next.generic.type			= MTYPE_BITMAP;
-	singleMenuInfo.item_next.generic.flags			= QMF_RIGHT_JUSTIFY|QMF_PULSEIFFOCUS|QMF_GRAYED;
-	singleMenuInfo.item_next.generic.x				= 640;
-	singleMenuInfo.item_next.generic.y				= 480-64;
-	singleMenuInfo.item_next.generic.callback		= UI_SPLevelMenu_NextEvent;
-	singleMenuInfo.item_next.generic.id				= ID_NEXT;
-	singleMenuInfo.item_next.width					= 128;
-	singleMenuInfo.item_next.height					= 64;
-	singleMenuInfo.item_next.generic.name			= ART_FIGHT0;
-	singleMenuInfo.item_next.focuspic				= ART_FIGHT1;
+	singleMenuInfo.next.generic.type			= MTYPE_BITMAP;
+	singleMenuInfo.next.generic.flags			= QMF_RIGHT_JUSTIFY|QMF_PULSEIFFOCUS|QMF_GRAYED;
+	singleMenuInfo.next.generic.x				= 640;
+	singleMenuInfo.next.generic.y				= 480-64;
+	singleMenuInfo.next.generic.callback		= UI_SPLevelMenu_NextEvent;
+	singleMenuInfo.next.generic.id				= ID_NEXT;
+	singleMenuInfo.next.width					= 128;
+	singleMenuInfo.next.height					= 64;
+	singleMenuInfo.next.generic.name			= ART_FIGHT0;
+	singleMenuInfo.next.focuspic				= ART_FIGHT1;
 
-	Menu_AddItem( &singleMenuInfo.menu, &singleMenuInfo.item_banner );
-	Menu_AddItem(&singleMenuInfo.menu, &singleMenuInfo.item_episode);
-	// Menu_AddItem(&singleMenuInfo.menu, &singleMenuInfo.item_episode_label);
-	Menu_AddItem(&singleMenuInfo.menu, &singleMenuInfo.item_map);
-	Menu_AddItem( &singleMenuInfo.menu, &singleMenuInfo.item_back );
-	Menu_AddItem( &singleMenuInfo.menu, &singleMenuInfo.item_next );
+	Menu_AddItem( &singleMenuInfo.menu, &singleMenuInfo.banner );
+	Menu_AddItem( &singleMenuInfo.menu, &singleMenuInfo.back );
+	Menu_AddItem(&singleMenuInfo.menu, &singleMenuInfo.episode);
+	Menu_AddItem(&singleMenuInfo.menu, &singleMenuInfo.map);
+	Menu_AddItem( &singleMenuInfo.menu, &singleMenuInfo.next );
 }
 
 
@@ -654,7 +734,7 @@ UI_SPLevelMenu
 void UI_SPLevelMenu( void ) {
 	UI_SPLevelMenu_Init();
 	UI_PushMenu(&singleMenuInfo.menu);
-	Menu_SetCursorToItem(&singleMenuInfo.menu, &singleMenuInfo.item_back);
+	// Menu_SetCursorToItem(&singleMenuInfo.menu, &singleMenuInfo.back);
 }
 
 
